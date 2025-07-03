@@ -1,0 +1,27 @@
+name: iampelgading
+description: "A new Flutter project."
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ^3.8.0-1.0.dev
+
+dependencies:
+  flutter:
+    sdk: flutter
+  intl: ^0.20.2
+  provider: ^6.1.5
+  flutter_svg: ^2.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/
+    - assets/svg/
+    - assets/svg/dashboard/
