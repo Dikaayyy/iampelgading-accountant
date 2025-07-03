@@ -103,7 +103,7 @@ class BalanceCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(
-                          Icons.arrow_upward,
+                          Icons.arrow_downward,
                           size: 12,
                           color: Color(0xFF40B029),
                         ),
@@ -147,7 +147,7 @@ class BalanceCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(
-                          Icons.arrow_downward,
+                          Icons.arrow_upward,
                           size: 12,
                           color: Color(0xFFFF4545),
                         ),

@@ -44,7 +44,7 @@ class SimpleTransactionItem extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(
-                icon ?? (isIncome ? Icons.arrow_upward : Icons.arrow_downward),
+                icon ?? (isIncome ? Icons.arrow_downward : Icons.arrow_upward),
                 size: 16,
                 color:
                     isIncome
@@ -126,7 +126,7 @@ class SimpleTransactionItem extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
-                      isIncome ? Icons.arrow_upward : Icons.arrow_downward,
+                      isIncome ? Icons.arrow_downward : Icons.arrow_upward,
                       size: 12,
                       color:
                           isIncome

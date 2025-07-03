@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:iampelgading/features/dashboard/presentation/providers/dashboard_provider.dart';
-import 'package:iampelgading/features/dashboard/presentation/widgets/dashboard_header_background.dart';
 import 'package:iampelgading/features/dashboard/presentation/widgets/balance_card.dart';
-import 'package:iampelgading/features/dashboard/presentation/widgets/simple_transaction_item.dart';
+import 'package:iampelgading/features/dashboard/presentation/widgets/dashboard_header.dart';
+import 'package:iampelgading/features/dashboard/presentation/widgets/transaction_section.dart';
 import 'package:provider/provider.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -45,7 +45,16 @@ class _DashboardViewState extends State<DashboardView> {
                   const SizedBox(height: 24),
 
                   // Transaction List Section
-                  _buildTransactionSection(provider),
+                  TransactionSection(
+                    transactions: _getMockTransactions(),
+                    isLoading: provider.isLoading,
+                    onViewAllTap: () {
+                      // Navigate to all transactions
+                    },
+                    onTransactionTap: (transaction) {
+                      // Navigate to transaction detail
+                    },
+                  ),
                 ],
               ),
             ),
@@ -62,73 +71,10 @@ class _DashboardViewState extends State<DashboardView> {
       height: 352,
       child: Stack(
         children: [
-          // Orange Background with Rounded Bottom
-          Positioned(
-            left: 0,
-            top: 0,
-            child: Container(
-              width: screenWidth,
-              height: 278,
-              decoration: const ShapeDecoration(
-                color: Color(0xFFFFB74D),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(30),
-                    bottomRight: Radius.circular(30),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Background Pattern using SVG
-          Positioned(
-            left: 0,
-            top: 0,
-            child: ClipRRect(
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-              child: SizedBox(
-                width: screenWidth,
-                height: 278,
-                child: const DashboardHeaderBackground(
-                  height: 278,
-                  child: SizedBox.shrink(),
-                ),
-              ),
-            ),
-          ),
-
-          // Welcome Text
-          Positioned(
-            left: 24,
-            top: 68,
-            right: 24,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Halo,',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w400,
-                    letterSpacing: -0.80,
-                  ),
-                ),
-                Text(
-                  provider.userName ?? 'Admin Iampelgading',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -1,
-                  ),
-                ),
-              ],
-            ),
+          // Dashboard Header
+          DashboardHeader(
+            screenWidth: screenWidth,
+            userName: provider.userName,
           ),
 
           // Overlapping Balance Card
@@ -153,61 +99,9 @@ class _DashboardViewState extends State<DashboardView> {
     );
   }
 
-  Widget _buildTransactionSection(DashboardProvider provider) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Transaksi Terbaru',
-                style: TextStyle(
-                  color: Color(0xFF202D41),
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              GestureDetector(
-                onTap: () {
-                  // Navigate to all transactions
-                },
-                child: const Text(
-                  'Lihat Semua',
-                  style: TextStyle(
-                    color: Color(0xFF64B5F6),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 12),
-
-          // Transaction List
-          if (provider.isLoading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.all(32.0),
-                child: CircularProgressIndicator(),
-              ),
-            )
-          else
-            _buildTransactionList(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTransactionList() {
-    // Sample transaction data - replace with actual data from provider
-    final transactions = [
+  List<Map<String, dynamic>> _getMockTransactions() {
+    // Move mock data to a separate method or better yet, to a repository
+    return [
       {
         'title': 'Tiket Masuk Wisata',
         'time': '14:30',
@@ -244,39 +138,5 @@ class _DashboardViewState extends State<DashboardView> {
         'icon': Icons.local_parking,
       },
     ];
-
-    return Column(
-      children: [
-        for (int i = 0; i < transactions.length; i++) ...[
-          SimpleTransactionItem(
-            title: transactions[i]['title'] as String,
-            time: transactions[i]['time'] as String,
-            date: transactions[i]['date'] as String,
-            amount: transactions[i]['amount'] as double,
-            icon: transactions[i]['icon'] as IconData,
-            onTap: () {
-              // Navigate to transaction detail
-            },
-          ),
-          if (i < transactions.length - 1)
-            Opacity(
-              opacity: 0.10,
-              child: Container(
-                width: double.infinity,
-                height: 1,
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                decoration: ShapeDecoration(
-                  color: const Color(0xFF6A788D),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-            ),
-        ],
-
-        const SizedBox(height: 24),
-      ],
-    );
   }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'features/dashboard/presentation/pages/dashboard_page.dart';
 
 void main() {
