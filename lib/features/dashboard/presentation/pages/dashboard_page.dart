@@ -3,6 +3,7 @@ import 'package:iampelgading/features/dashboard/presentation/providers/dashboard
 import 'package:iampelgading/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:iampelgading/features/dashboard/presentation/widgets/dashboard_header.dart';
 import 'package:iampelgading/features/dashboard/presentation/widgets/transaction_section.dart';
+import 'package:iampelgading/features/financial_records/presentation/pages/financial_records_page.dart';
 import 'package:provider/provider.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -49,7 +50,11 @@ class _DashboardViewState extends State<DashboardView> {
                     transactions: _getMockTransactions(),
                     isLoading: provider.isLoading,
                     onViewAllTap: () {
-                      // Navigate to all transactions
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const FinancialRecordsPage(),
+                        ),
+                      );
                     },
                     onTransactionTap: (transaction) {
                       // Navigate to transaction detail
