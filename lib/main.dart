@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iampelgading/core/theme/app_theme.dart';
-import 'features/dashboard/presentation/pages/dashboard_page.dart';
+import 'package:iampelgading/core/navigation/app_navigation.dart';
 
 void main() {
   runApp(const MainApp());
@@ -14,7 +14,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       title: 'Akuntansi Iampelgading',
       theme: AppTheme.lightTheme,
-      home: const DashboardPage(),
+      home: const AppNavigation(),
       debugShowCheckedModeBanner: false,
     );
   }
