@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:iampelgading/core/colors/app_colors';
+import 'package:iampelgading/core/colors/app_colors.dart';
 import 'package:iampelgading/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:iampelgading/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:iampelgading/features/dashboard/presentation/widgets/dashboard_header.dart';

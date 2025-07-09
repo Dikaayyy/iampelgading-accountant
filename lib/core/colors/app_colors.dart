@@ -5,21 +5,18 @@ class AppColors {
 
   static const MaterialColor base = MaterialColor(
     0xFFFFB74D, // primary value
-    <int, Color>{
-      50: Color(0xFFFFB74D),
-      100: Color(0xFFFFFFFF),
-    },
+    <int, Color>{50: Color(0xFFFFB74D), 100: Color(0xFFFFFFFF)},
   );
 
   static const MaterialColor warning = MaterialColor(
-      0xFFFFC107, // primary value
-      <int, Color>{
-        50: Color(0xFFFEF6AC),
-        100: Color(0xFFFFF27B),
-        200: Color(0xFFFFED4C),
-        300: Color(0xFFFDE82C),
-      });
-
+    0xFFFFC107, // primary value
+    <int, Color>{
+      50: Color(0xFFFEF6AC),
+      100: Color(0xFFFFF27B),
+      200: Color(0xFFFFED4C),
+      300: Color(0xFFFDE82C),
+    },
+  );
 
   static const MaterialColor error = MaterialColor(
     0xFFE74C3C, // primary value
@@ -33,7 +30,6 @@ class AppColors {
       600: Color(0xFFdc2626),
     },
   );
-
 
   static const MaterialColor success = MaterialColor(
     0xFF10B981, // primary value
@@ -50,17 +46,15 @@ class AppColors {
 
   static const MaterialColor background = MaterialColor(
     0xFFf9f9f9, // primary value
-    <int, Color>{
-      50: Color(0xFFFDFCFA),
-      100: Color(0xFFF7FAFC),
-    },
+    <int, Color>{50: Color(0xFFFDFCFA), 100: Color(0xFFF7FAFC)},
   );
 
-    static const MaterialColor neutral = MaterialColor(
+  static const MaterialColor neutral = MaterialColor(
     0xFFF7FAFC, // primary value
     <int, Color>{
       50: Color(0xFFCACACA),
-      100: Color(0xFF343434),
+      100: Color(0xFFD0C9BF),
+      200: Color(0xFF343434),
     },
   );
 
