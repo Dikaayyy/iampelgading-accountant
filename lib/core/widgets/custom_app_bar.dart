@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:iampelgading/core/assets/app_assets.dart';
+import 'package:iampelgading/core/theme/app_text_styles.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -45,7 +46,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           AppBar(
             title: Text(
               title,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              style: AppTextStyles.h3.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             centerTitle: centerTitle,
             backgroundColor: Colors.transparent,

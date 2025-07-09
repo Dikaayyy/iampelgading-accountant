@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iampelgading/core/theme/app_text_styles.dart';
 import 'package:iampelgading/core/utils/currency_formater.dart';
 
 class BalanceCard extends StatelessWidget {
@@ -43,11 +44,10 @@ class BalanceCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Text(
+                  Text(
                     'Saldo',
-                    style: TextStyle(
-                      color: Color(0xFF202D41),
-                      fontSize: 16,
+                    style: AppTextStyles.h4.copyWith(
+                      color: const Color(0xFF202D41),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -58,10 +58,8 @@ class BalanceCard extends StatelessWidget {
                 children: [
                   Text(
                     isVisible ? CurrencyFormatter.format(balance) : '••••••••',
-                    style: const TextStyle(
-                      color: Color(0xFF202D41),
-                      fontSize: 30,
-                      fontWeight: FontWeight.w600,
+                    style: AppTextStyles.h1.copyWith(
+                      color: const Color(0xFF202D41),
                       letterSpacing: -1.50,
                     ),
                   ),
@@ -109,11 +107,10 @@ class BalanceCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      const Text(
+                      Text(
                         'Pemasukan',
-                        style: TextStyle(
-                          color: Color(0xFF40B029),
-                          fontSize: 16,
+                        style: AppTextStyles.h4.copyWith(
+                          color: const Color(0xFF40B029),
                           fontWeight: FontWeight.w500,
                           letterSpacing: -0.80,
                         ),
@@ -123,10 +120,8 @@ class BalanceCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     isVisible ? CurrencyFormatter.format(income) : '••••••••',
-                    style: const TextStyle(
-                      color: Color(0xFF202D41),
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
+                    style: AppTextStyles.h3.copyWith(
+                      color: const Color(0xFF202D41),
                       letterSpacing: -1,
                     ),
                   ),
@@ -153,11 +148,10 @@ class BalanceCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Text(
+                      Text(
                         'Pengeluaran',
-                        style: TextStyle(
-                          color: Color(0xFFFF4545),
-                          fontSize: 16,
+                        style: AppTextStyles.h4.copyWith(
+                          color: const Color(0xFFFF4545),
                           fontWeight: FontWeight.w500,
                           letterSpacing: -0.80,
                         ),
@@ -168,10 +162,8 @@ class BalanceCard extends StatelessWidget {
                   Text(
                     isVisible ? CurrencyFormatter.format(expense) : '••••••••',
                     textAlign: TextAlign.right,
-                    style: const TextStyle(
-                      color: Color(0xFF202D41),
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
+                    style: AppTextStyles.h3.copyWith(
+                      color: const Color(0xFF202D41),
                       letterSpacing: -1,
                     ),
                   ),

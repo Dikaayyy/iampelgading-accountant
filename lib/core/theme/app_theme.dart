@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iampelgading/core/colors/app_colors.dart';
+import 'package:iampelgading/core/theme/app_text_styles.dart';
 
 class AppTheme {
   static ThemeData get lightTheme {
@@ -40,41 +41,22 @@ class AppTheme {
 
       // Text Theme
       textTheme: const TextTheme(
-        // Headlines
-        headlineLarge: TextStyle(
-          fontSize: 30,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF202D41),
-          letterSpacing: -1.50,
-          fontFamily: 'Poppins',
-        ),
-        headlineMedium: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF202D41),
-          letterSpacing: -1,
-          fontFamily: 'Poppins',
-        ),
-        headlineSmall: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF202D41),
-          fontFamily: 'Poppins',
-        ),
+        // Headlines from app_text_styles.dart
+        headlineLarge: AppTextStyles.h1,
+        headlineMedium: AppTextStyles.h2,
+        headlineSmall: AppTextStyles.h3,
 
-        // Body Text
+        // Title large to match app_text_styles h4
+        titleLarge: AppTextStyles.h4,
+
+        // Body styles
         bodyLarge: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.w500,
           color: Color(0xFF1F2C40),
           fontFamily: 'Poppins',
         ),
-        bodyMedium: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: Color(0xFF6A788C),
-          fontFamily: 'Poppins',
-        ),
+        bodyMedium: AppTextStyles.body,
         bodySmall: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w400,
