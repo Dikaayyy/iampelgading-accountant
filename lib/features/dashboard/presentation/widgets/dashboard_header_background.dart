@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:iampelgading/core/assets/app_assets.dart';
 
 class DashboardHeaderBackground extends StatelessWidget {
   final Widget? child;
@@ -28,13 +29,10 @@ class DashboardHeaderBackground extends StatelessWidget {
           Positioned(
             top: 125,
             left: -125,
-            child: SvgPicture.asset('assets/svg/dashboard/ellipse.svg'),
+            child: SvgPicture.asset(AppAssets.ellipse),
           ),
           // Rectangle SVG instances
-          Positioned(
-            right: 0,
-            child: SvgPicture.asset('assets/svg/dashboard/rectangle.svg'),
-          ),
+          Positioned(right: 0, child: SvgPicture.asset(AppAssets.rectangle)),
 
           // Content overlay
           if (child != null)

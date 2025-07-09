@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iampelgading/core/theme/app_theme.dart';
 import 'features/dashboard/presentation/pages/dashboard_page.dart';
 
 void main() {
@@ -12,11 +13,7 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Akuntansi Iampelgading',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        fontFamily: 'Roboto',
-      ),
+      theme: AppTheme.lightTheme,
       home: const DashboardPage(),
       debugShowCheckedModeBanner: false,
     );
