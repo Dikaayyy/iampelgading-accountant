@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iampelgading/core/colors/app_colors';
 import 'package:iampelgading/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:iampelgading/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:iampelgading/features/dashboard/presentation/widgets/dashboard_header.dart';
@@ -31,7 +32,7 @@ class _DashboardViewState extends State<DashboardView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFCFBFA),
+      backgroundColor: AppColors.white,
       body: Consumer<DashboardProvider>(
         builder: (context, provider, child) {
           return RefreshIndicator(
