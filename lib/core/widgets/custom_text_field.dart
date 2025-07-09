@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iampelgading/core/colors/app_colors.dart';
+import 'package:iampelgading/core/theme/app_text_styles.dart';
 
 class CustomTextField extends StatelessWidget {
   final String label;
@@ -50,10 +51,9 @@ class CustomTextField extends StatelessWidget {
         // Label
         Text(
           label,
-          style: const TextStyle(
-            color: Color(0xFF343434),
+          style: AppTextStyles.h4.copyWith(
+            color: AppColors.neutral[200],
             fontSize: 16,
-            fontFamily: 'Poppins',
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -74,19 +74,15 @@ class CustomTextField extends StatelessWidget {
           focusNode: focusNode,
           autofocus: autofocus,
           enabled: enabled,
-          style: TextStyle(
+          style: AppTextStyles.body.copyWith(
             color: AppColors.neutral[200],
             fontSize: 16,
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.w500,
           ),
           decoration: InputDecoration(
             hintText: hintText,
-            hintStyle: TextStyle(
+            hintStyle: AppTextStyles.body.copyWith(
               color: AppColors.neutral[50],
               fontSize: 16,
-              fontFamily: 'Poppins',
-              fontWeight: FontWeight.w500,
             ),
             prefixIcon: prefixIcon,
             suffixIcon: suffixIcon,

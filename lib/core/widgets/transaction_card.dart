@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iampelgading/core/utils/currency_formater.dart';
+import 'package:iampelgading/core/theme/app_text_styles.dart';
 
 class TransactionCard extends StatelessWidget {
   final String title;
@@ -89,9 +90,8 @@ class TransactionCard extends StatelessWidget {
                       // Title
                       Text(
                         title,
-                        style: const TextStyle(
-                          color: Color(0xFF1F2C40),
-                          fontSize: 16,
+                        style: AppTextStyles.h4.copyWith(
+                          color: const Color(0xFF1F2C40),
                           fontWeight: FontWeight.w700,
                         ),
                         maxLines: 1,
@@ -106,10 +106,8 @@ class TransactionCard extends StatelessWidget {
                           // Time
                           Text(
                             time,
-                            style: const TextStyle(
-                              color: Color(0xFF6A788C),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                            style: AppTextStyles.body.copyWith(
+                              color: const Color(0xFF6A788C),
                             ),
                           ),
 
@@ -127,10 +125,8 @@ class TransactionCard extends StatelessWidget {
                           Flexible(
                             child: Text(
                               date,
-                              style: const TextStyle(
-                                color: Color(0xFF6A788C),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
+                              style: AppTextStyles.body.copyWith(
+                                color: const Color(0xFF6A788C),
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -185,10 +181,10 @@ class TransactionCard extends StatelessWidget {
           Flexible(
             child: Text(
               CurrencyFormatter.format(amount.abs()),
-              style: TextStyle(
+              style: AppTextStyles.h4.copyWith(
                 color: isIncome ? const Color(0xFF40B029) : Colors.red,
-                fontSize: 16,
                 fontWeight: FontWeight.w700,
+                fontSize: 16,
               ),
               textAlign: TextAlign.end,
               overflow: TextOverflow.ellipsis,
@@ -264,8 +260,7 @@ class CompactTransactionCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        fontSize: 14,
+                      style: AppTextStyles.body.copyWith(
                         fontWeight: FontWeight.w600,
                       ),
                       maxLines: 1,
@@ -273,7 +268,10 @@ class CompactTransactionCard extends StatelessWidget {
                     ),
                     Text(
                       '$category • $date',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      style: AppTextStyles.body.copyWith(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -284,10 +282,9 @@ class CompactTransactionCard extends StatelessWidget {
               // Amount
               Text(
                 CurrencyFormatter.format(amount.abs()),
-                style: TextStyle(
+                style: AppTextStyles.body.copyWith(
                   fontWeight: FontWeight.bold,
                   color: isIncome ? Colors.green : Colors.red,
-                  fontSize: 14,
                 ),
               ),
             ],

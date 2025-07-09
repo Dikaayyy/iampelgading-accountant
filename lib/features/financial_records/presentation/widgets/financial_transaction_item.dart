@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iampelgading/core/utils/currency_formater.dart';
+import 'package:iampelgading/core/theme/app_text_styles.dart';
 
 class FinancialTransactionItem extends StatelessWidget {
   final String title;
@@ -56,9 +57,8 @@ class FinancialTransactionItem extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      color: Color(0xFF1F2C40),
-                      fontSize: 16,
+                    style: AppTextStyles.h4.copyWith(
+                      color: const Color(0xFF1F2C40),
                       fontWeight: FontWeight.w700,
                     ),
                     maxLines: 1,
@@ -69,10 +69,8 @@ class FinancialTransactionItem extends StatelessWidget {
                     children: [
                       Text(
                         time,
-                        style: const TextStyle(
-                          color: Color(0xFF6A788C),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                        style: AppTextStyles.body.copyWith(
+                          color: const Color(0xFF6A788C),
                         ),
                       ),
                       Container(
@@ -86,10 +84,8 @@ class FinancialTransactionItem extends StatelessWidget {
                       Flexible(
                         child: Text(
                           date,
-                          style: const TextStyle(
-                            color: Color(0xFF6A788C),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                          style: AppTextStyles.body.copyWith(
+                            color: const Color(0xFF6A788C),
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -125,9 +121,8 @@ class FinancialTransactionItem extends StatelessWidget {
                   Flexible(
                     child: Text(
                       CurrencyFormatter.format(amount),
-                      style: TextStyle(
+                      style: AppTextStyles.h4.copyWith(
                         color: amountColor,
-                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
                       overflow: TextOverflow.ellipsis,

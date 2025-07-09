@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iampelgading/core/theme/app_text_styles.dart';
 import 'package:iampelgading/features/dashboard/presentation/widgets/dashboard_header_background.dart';
 
 class DashboardHeader extends StatelessWidget {
@@ -58,20 +59,18 @@ class DashboardHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Halo,',
-                style: TextStyle(
+                style: AppTextStyles.body.copyWith(
                   color: Colors.white,
-                  fontSize: 16,
                   fontWeight: FontWeight.w400,
                   letterSpacing: -0.80,
                 ),
               ),
               Text(
                 userName ?? 'Admin Iampelgading',
-                style: const TextStyle(
+                style: AppTextStyles.h3.copyWith(
                   color: Colors.white,
-                  fontSize: 20,
                   fontWeight: FontWeight.w600,
                   letterSpacing: -1,
                 ),

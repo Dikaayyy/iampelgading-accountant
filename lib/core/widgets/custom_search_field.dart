@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iampelgading/core/colors/app_colors.dart';
+import 'package:iampelgading/core/theme/app_text_styles.dart';
 
 class CustomSearchField extends StatefulWidget {
   final String? hintText;
@@ -94,19 +95,15 @@ class _CustomSearchFieldState extends State<CustomSearchField> {
         readOnly: widget.readOnly,
         enabled: widget.enabled,
         validator: widget.validator,
-        style: TextStyle(
+        style: AppTextStyles.body.copyWith(
           color: AppColors.neutral[200],
           fontSize: 16,
-          fontFamily: 'Poppins',
-          fontWeight: FontWeight.w500,
         ),
         decoration: InputDecoration(
           hintText: widget.hintText,
-          hintStyle: TextStyle(
+          hintStyle: AppTextStyles.body.copyWith(
             color: AppColors.neutral[50],
             fontSize: 16,
-            fontFamily: 'Poppins',
-            fontWeight: FontWeight.w500,
           ),
           prefixIcon:
               widget.prefixIcon ??

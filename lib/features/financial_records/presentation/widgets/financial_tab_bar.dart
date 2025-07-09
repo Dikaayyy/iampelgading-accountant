@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iampelgading/core/theme/app_text_styles.dart';
 
 class FinancialTabBar extends StatelessWidget {
   final TabController tabController;
@@ -26,14 +27,8 @@ class FinancialTabBar extends StatelessWidget {
         ),
         labelColor: const Color(0xFFFFB74D),
         unselectedLabelColor: const Color(0xFF202D41),
-        labelStyle: const TextStyle(
-          fontSize: 16,
-          fontFamily: 'Poppins',
-          fontWeight: FontWeight.w600,
-        ),
-        unselectedLabelStyle: const TextStyle(
-          fontSize: 16,
-          fontFamily: 'Poppins',
+        labelStyle: AppTextStyles.h4.copyWith(fontWeight: FontWeight.w600),
+        unselectedLabelStyle: AppTextStyles.h4.copyWith(
           fontWeight: FontWeight.w600,
         ),
         tabs: const [Tab(text: 'Pengeluaran'), Tab(text: 'Pemasukan')],
