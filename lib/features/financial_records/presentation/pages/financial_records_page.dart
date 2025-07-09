@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:iampelgading/features/financial_records/presentation/widgets/financial_tab_bar.dart';
 import 'package:iampelgading/features/financial_records/presentation/widgets/financial_transaction_list.dart';
+import 'package:iampelgading/core/widgets/custom_search_field.dart';
+import 'package:iampelgading/core/widgets/custom_app_bar.dart';
 
 class FinancialRecordsPage extends StatefulWidget {
   const FinancialRecordsPage({super.key});
@@ -12,6 +14,7 @@ class FinancialRecordsPage extends StatefulWidget {
 class _FinancialRecordsPageState extends State<FinancialRecordsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -22,6 +25,7 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -29,43 +33,34 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFCFBFA),
+      appBar: CustomAppBar(
+        title: 'Catatan Keuangan',
+        backgroundColor: const Color(0xFFFFB74D),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ),
       body: Column(
         children: [
-          // Header with orange background
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.only(
-              top: 64,
-              left: 24,
-              right: 24,
-              bottom: 19,
-            ),
-            decoration: const BoxDecoration(color: Color(0xFFFFB74D)),
-            child: Row(
-              children: [
-                GestureDetector(
-                  onTap: () => Navigator.of(context).pop(),
-                  child: const Icon(
-                    Icons.arrow_back,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 72),
-                const Text(
-                  'Catatan Keuangan',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -1,
-                  ),
-                ),
-              ],
+          const SizedBox(height: 24),
+
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: CustomSearchField(
+              controller: _searchController,
+              hintText: 'Cari transaksi...',
+              onChanged: (value) {
+                // Implement search functionality here
+                setState(() {
+                  // Filter your transactions based on search value
+                });
+              },
             ),
           ),
 
-          const SizedBox(height: 63),
+          const SizedBox(height: 20),
 
           // Tab Bar
           FinancialTabBar(tabController: _tabController),

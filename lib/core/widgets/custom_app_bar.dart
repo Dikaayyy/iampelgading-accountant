@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:iampelgading/core/assets/app_assets.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -6,6 +8,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Widget? leading;
   final bool centerTitle;
   final Color? backgroundColor;
+  final double height;
 
   const CustomAppBar({
     super.key,
@@ -14,24 +17,48 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.leading,
     this.centerTitle = true,
     this.backgroundColor,
+    this.height = kToolbarHeight,
   });
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+    return Container(
+      decoration: BoxDecoration(
+        color: backgroundColor ?? Theme.of(context).primaryColor,
       ),
-      centerTitle: centerTitle,
-      backgroundColor: backgroundColor ?? Theme.of(context).primaryColor,
-      foregroundColor: Colors.white,
-      elevation: 2,
-      leading: leading,
-      actions: actions,
+      child: Stack(
+        children: [
+          // Background decorative elements
+          Positioned(
+            top: height * 0.6,
+            left: -height * 2.3,
+            child: SvgPicture.asset(AppAssets.ellipse),
+          ),
+
+          Positioned(
+            right: 0,
+            top: -height * 1,
+            child: SvgPicture.asset(AppAssets.rectangle),
+          ),
+
+          // AppBar content
+          AppBar(
+            title: Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+            centerTitle: centerTitle,
+            backgroundColor: Colors.transparent,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            leading: leading,
+            actions: actions,
+          ),
+        ],
+      ),
     );
   }
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => Size.fromHeight(height);
 }

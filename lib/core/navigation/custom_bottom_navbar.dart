@@ -21,7 +21,7 @@ class CustomBottomNavbar extends StatelessWidget {
       handleAndroidBackButtonPress: true,
       resizeToAvoidBottomInset: true,
       stateManagement: true,
-      hideNavigationBarWhenKeyboardAppears: true,
+      hideNavigationBarWhenKeyboardAppears: false,
       padding: const EdgeInsets.only(top: 8),
       backgroundColor: AppColors.white,
       isVisible: true,
