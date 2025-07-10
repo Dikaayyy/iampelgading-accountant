@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:iampelgading/core/colors/app_colors.dart';
 import 'package:iampelgading/features/dashboard/presentation/providers/dashboard_provider.dart';
 import 'package:iampelgading/features/dashboard/presentation/widgets/balance_card.dart';
@@ -52,23 +53,25 @@ class _DashboardViewState extends State<DashboardView> {
                     transactions: _getMockTransactions(),
                     isLoading: provider.isLoading,
                     onViewAllTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => const FinancialRecordsPage(),
-                        ),
+                      PersistentNavBarNavigator.pushNewScreen(
+                        context,
+                        screen: const FinancialRecordsPage(),
+                        withNavBar: false, // This hides the bottom navbar
+                        pageTransitionAnimation:
+                            PageTransitionAnimation.cupertino,
                       );
                     },
                     onTransactionTap: (transaction) {
                       // Navigate to transaction detail from dashboard
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder:
-                              (context) => TransactionDetailPage(
-                                transaction: transaction,
-                                isExpense:
-                                    (transaction['amount'] as double) < 0,
-                              ),
+                      PersistentNavBarNavigator.pushNewScreen(
+                        context,
+                        screen: TransactionDetailPage(
+                          transaction: transaction,
+                          isExpense: (transaction['amount'] as double) < 0,
                         ),
+                        withNavBar: false, // This hides the bottom navbar
+                        pageTransitionAnimation:
+                            PageTransitionAnimation.cupertino,
                       );
                     },
                   ),

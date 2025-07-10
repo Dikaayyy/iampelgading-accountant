@@ -42,7 +42,7 @@ class CustomButton extends StatelessWidget {
     final Color finalBackgroundColor = backgroundColor ?? AppColors.base;
     final Color finalTextColor = textColor ?? Colors.white;
 
-    return Container(
+    return SizedBox(
       width: width,
       height: height,
       child: Material(
@@ -56,7 +56,7 @@ class CustomButton extends StatelessWidget {
               color:
                   isButtonEnabled
                       ? finalBackgroundColor
-                      : finalBackgroundColor.withOpacity(0.5),
+                      : finalBackgroundColor.withOpacity(1),
               shape: RoundedRectangleBorder(
                 borderRadius: borderRadius ?? BorderRadius.circular(15),
               ),
@@ -90,7 +90,7 @@ class CustomButton extends StatelessWidget {
                           color:
                               isButtonEnabled
                                   ? finalTextColor
-                                  : finalTextColor.withOpacity(0.7),
+                                  : finalTextColor.withOpacity(1),
                           fontSize: fontSize ?? 16,
                           fontWeight: fontWeight ?? FontWeight.w500,
                         ),
@@ -130,8 +130,8 @@ class PrimaryButton extends StatelessWidget {
       text: text,
       onPressed: onPressed,
       width: width,
-      backgroundColor: AppColors.base,
-      textColor: Colors.white,
+      backgroundColor: AppColors.base[50],
+      textColor: AppColors.base[100],
       isLoading: isLoading,
       icon: icon,
     );

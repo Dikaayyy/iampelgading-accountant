@@ -1,16 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
+import 'package:iampelgading/features/profile/presentation/pages/change_password_page.dart';
+import 'package:iampelgading/features/profile/presentation/pages/profile_settings_page.dart';
 import 'package:iampelgading/features/profile/presentation/widgets/profile_menu_item.dart';
 
 class ProfileMenuSection extends StatelessWidget {
   final VoidCallback? onChangePassword;
   final VoidCallback? onChangeUsername;
   final VoidCallback? onAppInfo;
+  final String currentUsername;
+  final String? currentImageUrl;
+  final Function(String username, String? imageUrl)? onProfileUpdated;
 
   const ProfileMenuSection({
     super.key,
     this.onChangePassword,
     this.onChangeUsername,
     this.onAppInfo,
+    required this.currentUsername,
+    this.currentImageUrl,
+    this.onProfileUpdated,
   });
 
   @override
@@ -34,15 +43,40 @@ class ProfileMenuSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ProfileMenuItem(
-            title: 'Ganti Password',
+            title: 'Pengaturan Profil',
             icon: Icons.chevron_right,
-            onTap: onChangePassword,
+            onTap: () async {
+              final result = await PersistentNavBarNavigator.pushNewScreen(
+                context,
+                screen: ProfileSettingsPage(
+                  currentUsername: currentUsername,
+                  currentImageUrl: currentImageUrl,
+                ),
+                withNavBar: false,
+                pageTransitionAnimation: PageTransitionAnimation.cupertino,
+              );
+
+              if (result != null && result is Map<String, dynamic>) {
+                final username = result['username'] as String?;
+                final imageUrl = result['imageUrl'] as String?;
+                if (username != null && onProfileUpdated != null) {
+                  onProfileUpdated!(username, imageUrl);
+                }
+              }
+            },
           ),
           const SizedBox(height: 12),
           ProfileMenuItem(
-            title: 'Ganti Username',
+            title: 'Ganti Password',
             icon: Icons.chevron_right,
-            onTap: onChangeUsername,
+            onTap: () {
+              PersistentNavBarNavigator.pushNewScreen(
+                context,
+                screen: const ChangePasswordPage(),
+                withNavBar: false,
+                pageTransitionAnimation: PageTransitionAnimation.cupertino,
+              );
+            },
           ),
           const SizedBox(height: 12),
           ProfileMenuItem(

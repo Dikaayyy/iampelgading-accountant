@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:iampelgading/core/utils/currency_formater.dart';
 import 'package:iampelgading/core/theme/app_text_styles.dart';
 import 'package:iampelgading/features/financial_records/presentation/pages/transaction_detail_page.dart';
@@ -83,13 +84,10 @@ class UnifiedTransactionItem extends StatelessWidget {
                           color: Color(0xFF6A788D),
                         ),
                       ),
-                      Flexible(
-                        child: Text(
-                          date,
-                          style: AppTextStyles.body.copyWith(
-                            color: const Color(0xFF6A788C),
-                          ),
-                          overflow: TextOverflow.ellipsis,
+                      Text(
+                        date,
+                        style: AppTextStyles.body.copyWith(
+                          color: const Color(0xFF6A788C),
                         ),
                       ),
                     ],
@@ -98,40 +96,35 @@ class UnifiedTransactionItem extends StatelessWidget {
               ),
             ),
 
-            const SizedBox(width: 16),
-
             // Amount
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 128),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: amountColor.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Icon(
-                      isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-                      size: 12,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: amountColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+                    size: 12,
+                    color: amountColor,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    CurrencyFormatter.format(amount.abs()),
+                    style: AppTextStyles.h4.copyWith(
                       color: amountColor,
+                      fontWeight: FontWeight.w700,
                     ),
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(width: 4),
-                  Flexible(
-                    child: Text(
-                      CurrencyFormatter.format(amount.abs()),
-                      style: AppTextStyles.h4.copyWith(
-                        color: amountColor,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),
@@ -150,14 +143,14 @@ class UnifiedTransactionItem extends StatelessWidget {
           'icon': icon,
         };
 
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder:
-            (context) => TransactionDetailPage(
-              transaction: transaction,
-              isExpense: amount < 0,
-            ),
+    PersistentNavBarNavigator.pushNewScreen(
+      context,
+      screen: TransactionDetailPage(
+        transaction: transaction,
+        isExpense: amount < 0,
       ),
+      withNavBar: false, // This hides the bottom navbar
+      pageTransitionAnimation: PageTransitionAnimation.cupertino,
     );
   }
 }

@@ -30,6 +30,7 @@ class ProfileProvider with ChangeNotifier {
   }
 
   void onChangePassword() {
+    // Navigation will be handled in the UI
     print('Change password tapped');
   }
 

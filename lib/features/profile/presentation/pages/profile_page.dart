@@ -50,6 +50,14 @@ class _ProfileViewState extends State<ProfileView> {
                       child: SizedBox(
                         width: screenWidth,
                         child: ProfileMenuSection(
+                          currentUsername: provider.userName,
+                          currentImageUrl: provider.profileImageUrl,
+                          onProfileUpdated: (username, imageUrl) {
+                            provider.updateUserName(username);
+                            if (imageUrl != null) {
+                              provider.updateProfileImage(imageUrl);
+                            }
+                          },
                           onChangePassword: provider.onChangePassword,
                           onChangeUsername: provider.onChangeUsername,
                           onAppInfo: provider.onAppInfo,
@@ -72,10 +80,31 @@ class _ProfileViewState extends State<ProfileView> {
                                   color: Color(0xFFFFB74D),
                                   shape: OvalBorder(),
                                 ),
-                                child: const Icon(
-                                  Icons.person,
-                                  size: 60,
-                                  color: Colors.white,
+                                child: ClipOval(
+                                  child:
+                                      provider.profileImageUrl.isNotEmpty
+                                          ? Image.network(
+                                            provider.profileImageUrl,
+                                            width: 111,
+                                            height: 111,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (
+                                              context,
+                                              error,
+                                              stackTrace,
+                                            ) {
+                                              return const Icon(
+                                                Icons.person,
+                                                size: 60,
+                                                color: Colors.white,
+                                              );
+                                            },
+                                          )
+                                          : const Icon(
+                                            Icons.person,
+                                            size: 60,
+                                            color: Colors.white,
+                                          ),
                                 ),
                               ),
                               const SizedBox(height: 10),
