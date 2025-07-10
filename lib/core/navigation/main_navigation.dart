@@ -4,6 +4,7 @@ import 'package:iampelgading/core/colors/app_colors.dart';
 import 'package:iampelgading/core/navigation/navigation_service.dart';
 import 'package:iampelgading/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:iampelgading/features/financial_records/presentation/pages/financial_records_page.dart';
+import 'package:iampelgading/features/profile/presentation/pages/profile_page.dart';
 
 class MainNavigation extends StatelessWidget {
   const MainNavigation({super.key});
@@ -45,7 +46,7 @@ class MainNavigation extends StatelessWidget {
       const FinancialRecordsPage(),
       const _AddTransactionPage(),
       const _WalletPage(),
-      const _ProfilePage(),
+      const ProfilePage(), // Replace _ProfilePage with ProfilePage
     ];
   }
 
@@ -127,24 +128,6 @@ class _WalletPage extends StatelessWidget {
       ),
       body: const Center(
         child: Text('Halaman Dompet', style: TextStyle(fontSize: 18)),
-      ),
-    );
-  }
-}
-
-class _ProfilePage extends StatelessWidget {
-  const _ProfilePage();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        backgroundColor: AppColors.base,
-        foregroundColor: Colors.white,
-      ),
-      body: const Center(
-        child: Text('Halaman Profile', style: TextStyle(fontSize: 18)),
       ),
     );
   }

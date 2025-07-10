@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:iampelgading/core/navigation/custom_bottom_navbar.dart';
 import 'package:iampelgading/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:iampelgading/features/financial_records/presentation/pages/financial_records_page.dart';
+import 'package:iampelgading/features/profile/presentation/pages/profile_page.dart';
 
 class AppNavigation extends StatefulWidget {
   const AppNavigation({super.key});
@@ -19,7 +20,7 @@ class _AppNavigationState extends State<AppNavigation> {
         const FinancialRecordsPage(),
         const _PlaceholderPage(title: 'Add Transaction'),
         const _PlaceholderPage(title: 'Wallet'),
-        const _PlaceholderPage(title: 'Profile'),
+        const ProfilePage(),
       ],
     );
   }
