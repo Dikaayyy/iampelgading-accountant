@@ -1,38 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:iampelgading/core/utils/currency_formater.dart';
 import 'package:iampelgading/core/theme/app_text_styles.dart';
+import 'package:iampelgading/features/financial_records/presentation/pages/transaction_detail_page.dart';
 
-class FinancialTransactionItem extends StatelessWidget {
+class UnifiedTransactionItem extends StatelessWidget {
   final String title;
   final String time;
   final String date;
   final double amount;
   final IconData icon;
-  final bool isExpense;
   final VoidCallback? onTap;
+  final Map<String, dynamic>? transactionData;
 
-  const FinancialTransactionItem({
+  const UnifiedTransactionItem({
     super.key,
     required this.title,
     required this.time,
     required this.date,
     required this.amount,
     required this.icon,
-    required this.isExpense,
     this.onTap,
+    this.transactionData,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isIncome = amount > 0;
     final Color amountColor =
-        isExpense ? const Color(0xFFFF4545) : const Color(0xFF40B029);
+        isIncome ? const Color(0xFF40B029) : const Color(0xFFFF4545);
 
     return Container(
       width: double.infinity,
       height: 56,
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: InkWell(
-        onTap: onTap,
+        onTap: onTap ?? () => _navigateToDetail(context),
         borderRadius: BorderRadius.circular(12),
         child: Row(
           children: [
@@ -47,7 +49,7 @@ class FinancialTransactionItem extends StatelessWidget {
               child: Icon(icon, size: 16, color: amountColor),
             ),
 
-            const SizedBox(width: 24),
+            const SizedBox(width: 16),
 
             // Transaction Details
             Expanded(
@@ -112,7 +114,7 @@ class FinancialTransactionItem extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
-                      isExpense ? Icons.arrow_upward : Icons.arrow_downward,
+                      isIncome ? Icons.arrow_downward : Icons.arrow_upward,
                       size: 12,
                       color: amountColor,
                     ),
@@ -120,7 +122,7 @@ class FinancialTransactionItem extends StatelessWidget {
                   const SizedBox(width: 4),
                   Flexible(
                     child: Text(
-                      CurrencyFormatter.format(amount),
+                      CurrencyFormatter.format(amount.abs()),
                       style: AppTextStyles.h4.copyWith(
                         color: amountColor,
                         fontWeight: FontWeight.w700,
@@ -133,6 +135,28 @@ class FinancialTransactionItem extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _navigateToDetail(BuildContext context) {
+    final transaction =
+        transactionData ??
+        {
+          'title': title,
+          'time': time,
+          'date': date,
+          'amount': amount,
+          'icon': icon,
+        };
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder:
+            (context) => TransactionDetailPage(
+              transaction: transaction,
+              isExpense: amount < 0,
+            ),
       ),
     );
   }

@@ -5,6 +5,7 @@ import 'package:iampelgading/features/dashboard/presentation/widgets/balance_car
 import 'package:iampelgading/features/dashboard/presentation/widgets/dashboard_header.dart';
 import 'package:iampelgading/features/dashboard/presentation/widgets/transaction_section.dart';
 import 'package:iampelgading/features/financial_records/presentation/pages/financial_records_page.dart';
+import 'package:iampelgading/features/financial_records/presentation/pages/transaction_detail_page.dart';
 import 'package:provider/provider.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -58,7 +59,17 @@ class _DashboardViewState extends State<DashboardView> {
                       );
                     },
                     onTransactionTap: (transaction) {
-                      // Navigate to transaction detail
+                      // Navigate to transaction detail from dashboard
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder:
+                              (context) => TransactionDetailPage(
+                                transaction: transaction,
+                                isExpense:
+                                    (transaction['amount'] as double) < 0,
+                              ),
+                        ),
+                      );
                     },
                   ),
                 ],
@@ -106,7 +117,6 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   List<Map<String, dynamic>> _getMockTransactions() {
-    // Move mock data to a separate method or better yet, to a repository
     return [
       {
         'title': 'Tiket Masuk Wisata',
@@ -114,6 +124,8 @@ class _DashboardViewState extends State<DashboardView> {
         'date': '20 August 2024',
         'amount': 500000.0,
         'icon': Icons.confirmation_number,
+        'paymentMethod': 'Cash',
+        'description': 'Penjualan tiket masuk wisata hari ini',
       },
       {
         'title': 'Pemeliharaan Fasilitas',
@@ -121,6 +133,8 @@ class _DashboardViewState extends State<DashboardView> {
         'date': '20 August 2024',
         'amount': -250000.0,
         'icon': Icons.build,
+        'paymentMethod': 'Cash',
+        'description': 'Pemeliharaan rutin fasilitas wisata',
       },
       {
         'title': 'Penjualan Souvenir',
@@ -128,6 +142,8 @@ class _DashboardViewState extends State<DashboardView> {
         'date': '19 August 2024',
         'amount': 150000.0,
         'icon': Icons.shopping_bag,
+        'paymentMethod': 'QRIS',
+        'description': 'Penjualan souvenir dan merchandise',
       },
       {
         'title': 'Biaya Kebersihan',
@@ -135,6 +151,8 @@ class _DashboardViewState extends State<DashboardView> {
         'date': '19 August 2024',
         'amount': -75000.0,
         'icon': Icons.cleaning_services,
+        'paymentMethod': 'Transfer Bank',
+        'description': 'Biaya kebersihan harian',
       },
       {
         'title': 'Parkir Kendaraan',
@@ -142,6 +160,8 @@ class _DashboardViewState extends State<DashboardView> {
         'date': '18 August 2024',
         'amount': 50000.0,
         'icon': Icons.local_parking,
+        'paymentMethod': 'Cash',
+        'description': 'Biaya parkir kendaraan pengunjung',
       },
     ];
   }
