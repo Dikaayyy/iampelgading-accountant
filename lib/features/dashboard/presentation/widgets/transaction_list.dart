@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:iampelgading/features/dashboard/presentation/widgets/simple_transaction_item.dart';
+import 'package:iampelgading/core/widgets/unified_transaction_item.dart';
 
 class TransactionList extends StatelessWidget {
   final List<Map<String, dynamic>> transactions;
@@ -16,12 +16,13 @@ class TransactionList extends StatelessWidget {
     return Column(
       children: [
         for (int i = 0; i < transactions.length; i++) ...[
-          SimpleTransactionItem(
+          UnifiedTransactionItem(
             title: transactions[i]['title'] as String,
             time: transactions[i]['time'] as String,
             date: transactions[i]['date'] as String,
             amount: transactions[i]['amount'] as double,
             icon: transactions[i]['icon'] as IconData,
+            transactionData: transactions[i],
             onTap:
                 onTransactionTap != null
                     ? () => onTransactionTap!(transactions[i])

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:iampelgading/features/financial_records/presentation/widgets/financial_transaction_item.dart';
+import 'package:iampelgading/core/widgets/unified_transaction_item.dart';
 
 class FinancialTransactionList extends StatelessWidget {
   final List<Map<String, dynamic>> transactions;
@@ -35,16 +35,19 @@ class FinancialTransactionList extends StatelessWidget {
             ),
         itemBuilder: (context, index) {
           final transaction = transactions[index];
-          return FinancialTransactionItem(
+          // Convert amount to negative for expenses if needed
+          final amount =
+              isExpense && transaction['amount'] > 0
+                  ? -(transaction['amount'] as double)
+                  : transaction['amount'] as double;
+
+          return UnifiedTransactionItem(
             title: transaction['title'] as String,
             time: transaction['time'] as String,
             date: transaction['date'] as String,
-            amount: transaction['amount'] as double,
+            amount: amount,
             icon: transaction['icon'] as IconData,
-            isExpense: isExpense,
-            onTap: () {
-              // Handle transaction tap
-            },
+            transactionData: {...transaction, 'amount': amount},
           );
         },
       ),

@@ -98,6 +98,8 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
         'date': '20 August 2024',
         'amount': 250000.0,
         'icon': Icons.build,
+        'paymentMethod': 'Cash',
+        'description': 'Pemeliharaan rutin fasilitas wisata',
       },
       {
         'title': 'Biaya Kebersihan',
@@ -105,6 +107,8 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
         'date': '19 August 2024',
         'amount': 75000.0,
         'icon': Icons.cleaning_services,
+        'paymentMethod': 'Transfer Bank',
+        'description': 'Biaya kebersihan harian',
       },
       {
         'title': 'Konsumsi Staff',
@@ -112,6 +116,8 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
         'date': '18 August 2024',
         'amount': 550000.0,
         'icon': Icons.restaurant,
+        'paymentMethod': 'Cash',
+        'description': 'Konsumsi untuk staff selama 1 minggu',
       },
     ];
   }
@@ -124,6 +130,8 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
         'date': '20 August 2024',
         'amount': 500000.0,
         'icon': Icons.confirmation_number,
+        'paymentMethod': 'Cash',
+        'description': 'Penjualan tiket masuk wisata hari ini',
       },
       {
         'title': 'Penjualan Souvenir',
@@ -131,6 +139,8 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
         'date': '19 August 2024',
         'amount': 150000.0,
         'icon': Icons.shopping_bag,
+        'paymentMethod': 'QRIS',
+        'description': 'Penjualan souvenir dan merchandise',
       },
       {
         'title': 'Parkir Kendaraan',
@@ -138,6 +148,8 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
         'date': '18 August 2024',
         'amount': 50000.0,
         'icon': Icons.local_parking,
+        'paymentMethod': 'Cash',
+        'description': 'Biaya parkir kendaraan pengunjung',
       },
     ];
   }
