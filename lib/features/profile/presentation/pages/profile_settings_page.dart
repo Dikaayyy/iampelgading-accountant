@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'dart:io';
 import 'package:iampelgading/core/widgets/custom_text_field.dart';
 import 'package:iampelgading/core/widgets/custom_button.dart';
 import 'package:iampelgading/core/widgets/custom_app_bar.dart';
 import 'package:iampelgading/core/colors/app_colors.dart';
-import 'package:iampelgading/core/theme/app_text_styles.dart';
 import 'package:iampelgading/features/profile/presentation/providers/profile_settings_provider.dart';
 
 class ProfileSettingsPage extends StatelessWidget {
