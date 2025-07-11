@@ -250,15 +250,7 @@ class _CustomBottomNavbarState extends State<CustomBottomNavbar> {
   }
 
   void _navigateToAddTransaction({required bool isIncome}) {
-    // TODO: Navigate to add transaction page with type (income/expense)
-    // For now, just show a snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(isIncome ? 'Tambah Pemasukkan' : 'Tambah Pengeluaran'),
-        backgroundColor:
-            isIncome ? const Color(0xFF40B029) : const Color(0xFFFF4545),
-      ),
-    );
+    NavigationHelper.navigateToAddTransactionPage(context, isIncome: isIncome);
   }
 
   List<PersistentBottomNavBarItem> _buildNavItems(BuildContext context) {

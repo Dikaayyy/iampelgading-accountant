@@ -34,7 +34,7 @@ class _DashboardViewState extends State<DashboardView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.white,
+      backgroundColor: AppColors.background[200],
       body: Consumer<DashboardProvider>(
         builder: (context, provider, child) {
           return RefreshIndicator(

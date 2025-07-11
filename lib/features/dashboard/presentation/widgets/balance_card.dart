@@ -93,16 +93,13 @@ class BalanceCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Container(
+                      SizedBox(
                         width: 20,
                         height: 20,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF40B029).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+
                         child: const Icon(
                           Icons.arrow_downward,
-                          size: 12,
+                          size: 20,
                           color: Color(0xFF40B029),
                         ),
                       ),
@@ -134,16 +131,12 @@ class BalanceCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Container(
+                      SizedBox(
                         width: 20,
                         height: 20,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFF4545).withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
                         child: const Icon(
                           Icons.arrow_upward,
-                          size: 12,
+                          size: 20,
                           color: Color(0xFFFF4545),
                         ),
                       ),

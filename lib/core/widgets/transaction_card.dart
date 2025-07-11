@@ -60,19 +60,14 @@ class TransactionCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Category Icon
-                Container(
+                SizedBox(
                   width: 32,
                   height: 32,
-                  decoration: BoxDecoration(
-                    color: (categoryIconColor ??
-                            (isIncome ? Colors.green : Colors.red))
-                        .withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+
                   child: Icon(
                     categoryIcon ??
                         (isIncome ? Icons.arrow_upward : Icons.arrow_downward),
-                    size: 16,
+                    size: 20,
                     color:
                         categoryIconColor ??
                         (isIncome ? Colors.green : Colors.red),
@@ -161,16 +156,13 @@ class TransactionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Amount Direction Icon
-          Container(
+          SizedBox(
             width: 20,
             height: 20,
-            decoration: BoxDecoration(
-              color: (isIncome ? Colors.green : Colors.red).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
+
             child: Icon(
               isIncome ? Icons.arrow_upward : Icons.arrow_downward,
-              size: 12,
+              size: 20,
               color: isIncome ? Colors.green : Colors.red,
             ),
           ),
@@ -234,19 +226,13 @@ class CompactTransactionCard extends StatelessWidget {
           child: Row(
             children: [
               // Category Icon
-              Container(
+              SizedBox(
                 width: 28,
                 height: 28,
-                decoration: BoxDecoration(
-                  color: (isIncome ? Colors.green : Colors.red).withOpacity(
-                    0.1,
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
                 child: Icon(
                   categoryIcon ??
                       (isIncome ? Icons.arrow_upward : Icons.arrow_downward),
-                  size: 14,
+                  size: 20,
                   color: isIncome ? Colors.green : Colors.red,
                 ),
               ),

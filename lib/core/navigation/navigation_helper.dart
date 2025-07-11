@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:iampelgading/features/transaction/presentation/pages/transaction_page.dart';
+import 'package:provider/provider.dart';
+import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:iampelgading/core/navigation/navigation_service.dart';
 import 'package:iampelgading/core/colors/app_colors.dart';
 import 'package:iampelgading/core/theme/app_text_styles.dart';
+import 'package:iampelgading/features/transaction/presentation/providers/transaction_provider.dart';
+import 'package:iampelgading/features/transaction/domain/usecases/add_transaction.dart';
+import 'package:iampelgading/features/transaction/data/repositories/transaction_repository_impl.dart';
 
 class NavigationHelper {
   static const int homeIndex = 0;
@@ -41,6 +47,26 @@ class NavigationHelper {
       builder: (context) => FloatingTransactionMenu(onClose: onClose),
     );
   }
+
+  // Navigate to add transaction page
+  static void navigateToAddTransactionPage(
+    BuildContext context, {
+    required bool isIncome,
+  }) {
+    // Create dependencies
+    final repository = TransactionRepositoryImpl();
+    final addTransaction = AddTransaction(repository);
+
+    PersistentNavBarNavigator.pushNewScreen(
+      context,
+      screen: ChangeNotifierProvider(
+        create: (_) => TransactionProvider(addTransaction),
+        child: TransactionPage(isIncome: isIncome),
+      ),
+      withNavBar: false,
+      pageTransitionAnimation: PageTransitionAnimation.cupertino,
+    );
+  }
 }
 
 class FloatingTransactionMenu extends StatelessWidget {
@@ -54,7 +80,7 @@ class FloatingTransactionMenu extends StatelessWidget {
       backgroundColor: Colors.transparent,
       body: GestureDetector(
         onTap: onClose,
-        child: Container(
+        child: SizedBox(
           width: double.infinity,
           height: double.infinity,
           child: Stack(
@@ -100,8 +126,8 @@ class FloatingTransactionMenu extends StatelessWidget {
                                 color: Colors.transparent,
                                 child: InkWell(
                                   onTap: () {
-                                    Navigator.of(context).pop();
-                                    _navigateToAddTransaction(
+                                    onClose();
+                                    NavigationHelper.navigateToAddTransactionPage(
                                       context,
                                       isIncome: true,
                                     );
@@ -150,8 +176,8 @@ class FloatingTransactionMenu extends StatelessWidget {
                                 color: Colors.transparent,
                                 child: InkWell(
                                   onTap: () {
-                                    Navigator.of(context).pop();
-                                    _navigateToAddTransaction(
+                                    onClose();
+                                    NavigationHelper.navigateToAddTransactionPage(
                                       context,
                                       isIncome: false,
                                     );
@@ -233,21 +259,6 @@ class FloatingTransactionMenu extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  void _navigateToAddTransaction(
-    BuildContext context, {
-    required bool isIncome,
-  }) {
-    // TODO: Navigate to add transaction page with type (income/expense)
-    // For now, just show a snackbar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(isIncome ? 'Tambah Pemasukkan' : 'Tambah Pengeluaran'),
-        backgroundColor:
-            isIncome ? const Color(0xFF40B029) : const Color(0xFFFF4545),
       ),
     );
   }

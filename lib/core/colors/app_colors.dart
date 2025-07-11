@@ -46,7 +46,11 @@ class AppColors {
 
   static const MaterialColor background = MaterialColor(
     0xFFf9f9f9, // primary value
-    <int, Color>{50: Color(0xFFFDFCFA), 100: Color(0xFFF7FAFC)},
+    <int, Color>{
+      50: Color(0xFFFDFCFA),
+      100: Color(0xFFF7FAFC),
+      200: Color(0xFFFCFBFA),
+    },
   );
 
   static const MaterialColor neutral = MaterialColor(

@@ -100,16 +100,12 @@ class UnifiedTransactionItem extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
+                SizedBox(
                   width: 20,
                   height: 20,
-                  decoration: BoxDecoration(
-                    color: amountColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
                   child: Icon(
                     isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-                    size: 12,
+                    size: 20,
                     color: amountColor,
                   ),
                 ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iampelgading/core/colors/app_colors.dart';
 
 class CustomCard extends StatelessWidget {
   final Widget child;
@@ -37,7 +38,7 @@ class CustomCard extends StatelessWidget {
                 padding ??
                 const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             decoration: ShapeDecoration(
-              color: color ?? Colors.white,
+              color: color ?? AppColors.background[200],
               shape: RoundedRectangleBorder(
                 borderRadius: borderRadius ?? BorderRadius.circular(18),
               ),
