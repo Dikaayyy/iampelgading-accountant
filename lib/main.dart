@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iampelgading/core/theme/app_theme.dart';
-import 'package:iampelgading/core/navigation/app_navigation.dart';
+import 'package:iampelgading/features/auth/presentation/pages/login_page.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 void main() async {
@@ -19,7 +19,7 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       title: 'Akuntansi Iampelgading',
       theme: AppTheme.lightTheme,
-      home: const AppNavigation(),
+      home: const LoginPage(),
       debugShowCheckedModeBanner: false,
     );
   }

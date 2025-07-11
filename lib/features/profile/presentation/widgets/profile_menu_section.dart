@@ -4,6 +4,7 @@ import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:iampelgading/features/profile/presentation/pages/change_password_page.dart';
 import 'package:iampelgading/features/profile/presentation/pages/profile_settings_page.dart';
 import 'package:iampelgading/features/profile/presentation/widgets/profile_menu_item.dart';
+import 'package:iampelgading/features/auth/presentation/pages/login_page.dart';
 
 class ProfileMenuSection extends StatelessWidget {
   final VoidCallback? onChangePassword;
@@ -130,9 +131,6 @@ class ProfileMenuSection extends StatelessWidget {
   }
 
   void _performLogout(BuildContext context) {
-    // Add your logout logic here
-    // For example: clear user data, navigate to login screen, etc.
-
     // Show logout success message
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -142,7 +140,10 @@ class ProfileMenuSection extends StatelessWidget {
       ),
     );
 
-    // Navigate to login screen or main screen
-    // Navigator.of(context).pushReplacementNamed('/login');
+    // Navigate to login screen and clear all navigation stack
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+      (route) => false, // Remove all previous routes
+    );
   }
 }

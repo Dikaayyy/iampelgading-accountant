@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:iampelgading/core/navigation/custom_bottom_navbar.dart';
 import 'package:iampelgading/features/dashboard/presentation/pages/dashboard_page.dart';
-import 'package:iampelgading/features/financial_records/presentation/pages/financial_records_page.dart';
+import 'package:iampelgading/features/dashboard/presentation/pages/financial_records_page.dart';
 import 'package:iampelgading/features/profile/presentation/pages/profile_page.dart';
 
 class AppNavigation extends StatefulWidget {
@@ -12,17 +13,48 @@ class AppNavigation extends StatefulWidget {
 }
 
 class _AppNavigationState extends State<AppNavigation> {
+  DateTime? _lastPressedAt;
+
   @override
   Widget build(BuildContext context) {
-    return CustomBottomNavbar(
-      screens: [
-        const DashboardPage(),
-        const FinancialRecordsPage(),
-        const _PlaceholderPage(title: 'Add Transaction'),
-        const _PlaceholderPage(title: 'Wallet'),
-        const ProfilePage(),
-      ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop) return;
+
+        // Handle back button press - show exit confirmation
+        _onWillPop();
+      },
+      child: CustomBottomNavbar(
+        screens: [
+          const DashboardPage(),
+          const FinancialRecordsPage(),
+          const _PlaceholderPage(title: 'Add Transaction'),
+          const _PlaceholderPage(title: 'Wallet'),
+          const ProfilePage(),
+        ],
+      ),
     );
+  }
+
+  void _onWillPop() {
+    final now = DateTime.now();
+
+    if (_lastPressedAt == null ||
+        now.difference(_lastPressedAt!) > const Duration(seconds: 2)) {
+      _lastPressedAt = now;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tekan sekali lagi untuk keluar'),
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } else {
+      // Exit the app
+      SystemNavigator.pop();
+    }
   }
 }
 

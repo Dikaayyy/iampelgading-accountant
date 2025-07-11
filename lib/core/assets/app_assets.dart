@@ -8,4 +8,7 @@ class AppAssets {
   static const String graph = 'assets/svg/navbar/graph.svg';
   static const String person = 'assets/svg/navbar/person.svg';
   static const String wallet = 'assets/svg/navbar/wallet.svg';
+
+  //auth
+  static const String cuate = 'assets/png/auth/cuate.png';
 }

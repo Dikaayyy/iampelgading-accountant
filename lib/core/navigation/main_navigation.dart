@@ -3,7 +3,7 @@ import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:iampelgading/core/colors/app_colors.dart';
 import 'package:iampelgading/core/navigation/navigation_service.dart';
 import 'package:iampelgading/features/dashboard/presentation/pages/dashboard_page.dart';
-import 'package:iampelgading/features/financial_records/presentation/pages/financial_records_page.dart';
+import 'package:iampelgading/features/dashboard/presentation/pages/financial_records_page.dart';
 import 'package:iampelgading/features/profile/presentation/pages/profile_page.dart';
 
 class MainNavigation extends StatelessWidget {

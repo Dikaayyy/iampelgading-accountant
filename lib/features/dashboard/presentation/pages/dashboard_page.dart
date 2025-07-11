@@ -5,7 +5,7 @@ import 'package:iampelgading/features/dashboard/presentation/providers/dashboard
 import 'package:iampelgading/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:iampelgading/features/dashboard/presentation/widgets/dashboard_header.dart';
 import 'package:iampelgading/features/dashboard/presentation/widgets/transaction_section.dart';
-import 'package:iampelgading/features/financial_records/presentation/pages/financial_records_page.dart';
+import 'package:iampelgading/features/dashboard/presentation/pages/financial_records_page.dart';
 import 'package:iampelgading/features/financial_records/presentation/pages/transaction_detail_page.dart';
 import 'package:provider/provider.dart';
 
