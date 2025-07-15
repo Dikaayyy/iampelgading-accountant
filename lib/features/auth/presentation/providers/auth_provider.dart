@@ -1,17 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:iampelgading/features/auth/domain/entities/user.dart';
+import 'package:iampelgading/features/auth/domain/usecases/login_usecase.dart';
+import 'package:iampelgading/core/utils/error_handler.dart';
 
 class AuthProvider with ChangeNotifier {
+  final LoginUsecase _loginUsecase;
+
   bool _isLoading = false;
   bool _isPasswordVisible = false;
   String _username = '';
   String _password = '';
   String _errorMessage = '';
+  User? _currentUser;
+
+  AuthProvider({required LoginUsecase loginUsecase})
+    : _loginUsecase = loginUsecase;
 
   bool get isLoading => _isLoading;
   bool get isPasswordVisible => _isPasswordVisible;
   String get username => _username;
   String get password => _password;
   String get errorMessage => _errorMessage;
+  User? get currentUser => _currentUser;
 
   bool get isFormValid {
     return _username.isNotEmpty &&
@@ -70,26 +80,17 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
+      final user = await _loginUsecase.call(
+        username: _username,
+        password: _password,
+      );
 
-      // Mock authentication - replace with actual API call
-      if (_username == 'admin' && _password == 'admin123') {
-        // Login successful
-        _isLoading = false;
-        notifyListeners();
-      } else {
-        // Login failed
-        _errorMessage = 'Username atau password salah';
-        _isLoading = false;
-        notifyListeners();
-        throw Exception('Invalid credentials');
-      }
+      _currentUser = user;
+      _isLoading = false;
+      notifyListeners();
     } catch (e) {
       _isLoading = false;
-      if (_errorMessage.isEmpty) {
-        _errorMessage = 'Terjadi kesalahan saat login';
-      }
+      _errorMessage = ErrorHandler.getErrorMessage(e);
       notifyListeners();
       rethrow;
     }
@@ -100,6 +101,7 @@ class AuthProvider with ChangeNotifier {
     _password = '';
     _errorMessage = '';
     _isPasswordVisible = false;
+    _currentUser = null;
     notifyListeners();
   }
 }

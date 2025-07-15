@@ -8,6 +8,8 @@ import 'package:iampelgading/core/theme/app_text_styles.dart';
 import 'package:iampelgading/core/assets/app_assets.dart';
 import 'package:iampelgading/features/auth/presentation/providers/auth_provider.dart';
 import 'package:iampelgading/core/navigation/app_navigation.dart';
+import 'package:iampelgading/core/di/service_locator.dart';
+import 'package:iampelgading/core/managers/snackbar_manager.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -15,7 +17,7 @@ class LoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => AuthProvider(),
+      create: (_) => AuthProvider(loginUsecase: sl()),
       child: const LoginView(),
     );
   }
@@ -163,7 +165,7 @@ class _LoginViewState extends State<LoginView> {
                       // Username field
                       CustomTextField(
                         label: 'Username',
-                        hintText: 'E.g John Doe',
+                        hintText: 'E.g admin',
                         controller: _usernameController,
                         keyboardType: TextInputType.text,
                         validator: provider.validateUsername,
@@ -175,7 +177,7 @@ class _LoginViewState extends State<LoginView> {
                       // Password field
                       CustomTextField(
                         label: 'Password',
-                        hintText: 'E.g superadmin123',
+                        hintText: 'E.g password123',
                         controller: _passwordController,
                         obscureText: !provider.isPasswordVisible,
                         keyboardType: TextInputType.visiblePassword,
@@ -211,7 +213,7 @@ class _LoginViewState extends State<LoginView> {
 
                   const SizedBox(height: 16),
 
-                  // Error message
+                  // Error message (keep this as fallback)
                   if (provider.errorMessage.isNotEmpty)
                     Container(
                       width: double.infinity,
@@ -244,9 +246,21 @@ class _LoginViewState extends State<LoginView> {
   Future<void> _handleLogin(BuildContext context, AuthProvider provider) async {
     if (_formKey.currentState?.validate() ?? false) {
       try {
+        // Show loading snackbar
+        SnackbarManager.showLoginLoading(context: context);
+
         await provider.login();
 
         if (context.mounted) {
+          // Show success snackbar
+          SnackbarManager.showLoginSuccess(
+            context: context,
+            username: provider.currentUser?.username,
+          );
+
+          // Wait a bit to show the success message
+          await Future.delayed(const Duration(milliseconds: 500));
+
           // Navigate to main app and clear navigation stack
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (context) => const AppNavigation()),
@@ -255,15 +269,13 @@ class _LoginViewState extends State<LoginView> {
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Login gagal: ${e.toString()}'),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          // Show error snackbar with automatic error handling
+          SnackbarManager.showError(context: context, error: e);
         }
       }
+    } else {
+      // Show validation error snackbar
+      SnackbarManager.showLoginValidationError(context: context);
     }
   }
 }
