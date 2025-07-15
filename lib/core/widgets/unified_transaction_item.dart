@@ -11,7 +11,10 @@ class UnifiedTransactionItem extends StatelessWidget {
   final double amount;
   final IconData icon;
   final VoidCallback? onTap;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
   final Map<String, dynamic>? transactionData;
+  final bool showMenu;
 
   const UnifiedTransactionItem({
     super.key,
@@ -21,7 +24,10 @@ class UnifiedTransactionItem extends StatelessWidget {
     required this.amount,
     required this.icon,
     this.onTap,
+    this.onEdit,
+    this.onDelete,
     this.transactionData,
+    this.showMenu = true,
   });
 
   @override
@@ -38,88 +44,226 @@ class UnifiedTransactionItem extends StatelessWidget {
         onTap: onTap ?? () => _navigateToDetail(context),
         borderRadius: BorderRadius.circular(12),
         child: Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Icon
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: amountColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(icon, size: 16, color: amountColor),
+            // Left side - Icon and Transaction Details
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Icon
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: amountColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(icon, size: 16, color: amountColor),
+                ),
+
+                const SizedBox(width: 24),
+
+                // Transaction Details
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 158,
+                      child: Text(
+                        title,
+                        style: AppTextStyles.h4.copyWith(
+                          color: const Color(0xFF1F2C40),
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          time,
+                          style: AppTextStyles.body.copyWith(
+                            color: const Color(0xFF6A788C),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Container(
+                          width: 1,
+                          height: 13,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF6A788D),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          date,
+                          style: AppTextStyles.body.copyWith(
+                            color: const Color(0xFF6A788C),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ],
             ),
 
-            const SizedBox(width: 16),
-
-            // Transaction Details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    title,
-                    style: AppTextStyles.h4.copyWith(
-                      color: const Color(0xFF1F2C40),
-                      fontWeight: FontWeight.w700,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
+            // Right side - Amount and Menu
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Amount
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 128),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        time,
-                        style: AppTextStyles.body.copyWith(
-                          color: const Color(0xFF6A788C),
-                        ),
-                      ),
                       Container(
-                        width: 1,
-                        height: 13,
-                        margin: const EdgeInsets.symmetric(horizontal: 8),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF6A788D),
+                        width: 20,
+                        height: 20,
+                        child: Icon(
+                          isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+                          size: 20,
+                          color: amountColor,
                         ),
                       ),
-                      Text(
-                        date,
-                        style: AppTextStyles.body.copyWith(
-                          color: const Color(0xFF6A788C),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          CurrencyFormatter.format(amount.abs()),
+                          style: AppTextStyles.h4.copyWith(
+                            color: amountColor,
+                            fontWeight: FontWeight.w700,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
-                ],
-              ),
-            ),
+                ),
 
-            // Amount
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: Icon(
-                    isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-                    size: 20,
-                    color: amountColor,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Flexible(
-                  child: Text(
-                    CurrencyFormatter.format(amount.abs()),
-                    style: AppTextStyles.h4.copyWith(
-                      color: amountColor,
-                      fontWeight: FontWeight.w700,
+                // Menu Button
+                if (showMenu) ...[
+                  const SizedBox(width: 16),
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: PopupMenuButton<String>(
+                      onSelected: (value) {
+                        if (value == 'edit' && onEdit != null) {
+                          onEdit!();
+                        } else if (value == 'delete' && onDelete != null) {
+                          onDelete!();
+                        }
+                      },
+                      itemBuilder:
+                          (context) => [
+                            PopupMenuItem(
+                              value: 'edit',
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.edit,
+                                      size: 20,
+                                      color: const Color(0xFF343434),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      'Edit',
+                                      style: TextStyle(
+                                        color: const Color(0xFF343434),
+                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            // Divider line
+                            PopupMenuItem(
+                              enabled: false,
+                              height: 1,
+                              child: Container(
+                                width: double.infinity,
+                                height: 1,
+
+                                color: const Color(0xFFE5E5E5),
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.delete,
+                                      size: 20,
+                                      color: const Color(0xFFEF4444),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      'Hapus',
+                                      style: TextStyle(
+                                        color: const Color(0xFFEF4444),
+                                        fontSize: 14,
+                                        fontFamily: 'Poppins',
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                      // Tambahkan properties untuk styling PopupMenuButton
+                      color: const Color(0xFFFDFCFA), // Background putih
+                      surfaceTintColor: Colors.transparent,
+                      shadowColor: const Color(0x3FB4ADAD),
+                      elevation: 10.90,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      icon: const Icon(
+                        Icons.more_vert,
+                        size: 20,
+                        color: Color(0xFF6A788C),
+                      ),
+                      padding: EdgeInsets.zero,
+                      splashRadius: 20,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
+                ],
               ],
             ),
           ],

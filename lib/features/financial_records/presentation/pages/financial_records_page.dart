@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:iampelgading/core/widgets/custom_search_field.dart';
 import 'package:iampelgading/core/widgets/unified_transaction_item.dart';
 import 'package:iampelgading/core/widgets/custom_bottom_sheet.dart';
-import 'package:iampelgading/core/widgets/snackbar_helper.dart'; // Add this import
+import 'package:iampelgading/core/widgets/snackbar_helper.dart';
 import 'package:iampelgading/features/dashboard/presentation/widgets/balance_card.dart';
 import 'package:iampelgading/core/colors/app_colors.dart';
 import 'package:iampelgading/core/theme/app_text_styles.dart';
@@ -144,6 +144,9 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage> {
                           amount: transactions[i]['amount'] as double,
                           icon: transactions[i]['icon'] as IconData,
                           transactionData: transactions[i],
+                          onEdit: () => _handleEditTransaction(transactions[i]),
+                          onDelete:
+                              () => _handleDeleteTransaction(transactions[i]),
                         ),
                         if (i < transactions.length - 1)
                           Opacity(
@@ -170,6 +173,61 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage> {
             );
           }).toList(),
     );
+  }
+
+  void _handleEditTransaction(Map<String, dynamic> transaction) {
+    // TODO: Navigate to edit transaction page
+    SnackbarHelper.showInfo(
+      context: context,
+      title: 'Edit Transaksi',
+      message:
+          'Fitur edit transaksi "${transaction['title']}" akan segera tersedia',
+      showAtTop: true,
+    );
+  }
+
+  void _handleDeleteTransaction(Map<String, dynamic> transaction) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Hapus Transaksi'),
+          content: Text(
+            'Apakah Anda yakin ingin menghapus transaksi "${transaction['title']}"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Batal'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _confirmDeleteTransaction(transaction);
+              },
+              style: TextButton.styleFrom(foregroundColor: AppColors.error),
+              child: const Text('Hapus'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _confirmDeleteTransaction(Map<String, dynamic> transaction) {
+    // TODO: Implement actual delete functionality
+    // For now, just show a success message
+    SnackbarHelper.showSuccess(
+      context: context,
+      title: 'Transaksi Dihapus',
+      message: 'Transaksi "${transaction['title']}" berhasil dihapus',
+      showAtTop: true,
+    );
+
+    // Optionally refresh the data
+    setState(() {
+      // Remove the transaction from the list or refresh data
+    });
   }
 
   void _handleDownloadPressed() {
