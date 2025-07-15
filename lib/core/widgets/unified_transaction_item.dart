@@ -40,9 +40,8 @@ class UnifiedTransactionItem extends StatelessWidget {
       width: double.infinity,
       height: 56,
       padding: const EdgeInsets.symmetric(vertical: 7),
-      child: InkWell(
+      child: GestureDetector(
         onTap: onTap ?? () => _navigateToDetail(context),
-        borderRadius: BorderRadius.circular(12),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -210,7 +209,6 @@ class UnifiedTransactionItem extends StatelessWidget {
                               child: Container(
                                 width: double.infinity,
                                 height: 1,
-
                                 color: const Color(0xFFE5E5E5),
                               ),
                             ),
@@ -246,8 +244,7 @@ class UnifiedTransactionItem extends StatelessWidget {
                               ),
                             ),
                           ],
-                      // Tambahkan properties untuk styling PopupMenuButton
-                      color: const Color(0xFFFDFCFA), // Background putih
+                      color: const Color(0xFFFDFCFA),
                       surfaceTintColor: Colors.transparent,
                       shadowColor: const Color(0x3FB4ADAD),
                       elevation: 10.90,
@@ -260,7 +257,7 @@ class UnifiedTransactionItem extends StatelessWidget {
                         color: Color(0xFF6A788C),
                       ),
                       padding: EdgeInsets.zero,
-                      splashRadius: 20,
+                      splashRadius: 1,
                     ),
                   ),
                 ],

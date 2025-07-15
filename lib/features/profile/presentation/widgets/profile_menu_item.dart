@@ -19,35 +19,32 @@ class ProfileMenuItem extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: 36,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    title,
-                    style: AppTextStyles.h4.copyWith(
-                      color: AppColors.neutral[200],
-                      fontWeight: FontWeight.w500,
-                    ),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  title,
+                  style: AppTextStyles.h4.copyWith(
+                    color: AppColors.neutral[200],
+                    fontWeight: FontWeight.w500,
                   ),
-                  if (icon != null)
-                    Icon(icon, size: 16, color: AppColors.neutral[300]),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Container(
-                width: double.infinity,
-                height: 0.5,
-                decoration: BoxDecoration(color: AppColors.neutral[100]),
-              ),
-            ],
-          ),
+                ),
+                if (icon != null)
+                  Icon(icon, size: 16, color: AppColors.neutral[300]),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              height: 0.5,
+              decoration: BoxDecoration(color: AppColors.neutral[100]),
+            ),
+          ],
         ),
       ),
     );

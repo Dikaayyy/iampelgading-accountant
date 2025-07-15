@@ -23,6 +23,7 @@ class TransactionList extends StatelessWidget {
             amount: transactions[i]['amount'] as double,
             icon: transactions[i]['icon'] as IconData,
             transactionData: transactions[i],
+            showMenu: false,
             onTap:
                 onTransactionTap != null
                     ? () => onTransactionTap!(transactions[i])

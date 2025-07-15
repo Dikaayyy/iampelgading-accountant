@@ -124,7 +124,7 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage> {
                   ),
                   child: Text(
                     month,
-                    style: AppTextStyles.h3.copyWith(
+                    style: AppTextStyles.h4.copyWith(
                       color: const Color(0xFF202D41),
                       fontWeight: FontWeight.w600,
                     ),
@@ -191,6 +191,7 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: AppColors.background,
           title: const Text('Hapus Transaksi'),
           content: Text(
             'Apakah Anda yakin ingin menghapus transaksi "${transaction['title']}"?',

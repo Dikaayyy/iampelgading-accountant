@@ -21,7 +21,7 @@ class TransactionHistoryHeader extends StatelessWidget {
         children: [
           Text(
             'Riwayat Transaksi',
-            style: AppTextStyles.h4.copyWith(
+            style: AppTextStyles.h3.copyWith(
               color: const Color(0xFF202D41),
               fontWeight: FontWeight.w500,
             ),

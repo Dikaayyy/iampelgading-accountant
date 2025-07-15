@@ -35,7 +35,6 @@ class FinancialTransactionList extends StatelessWidget {
             ),
         itemBuilder: (context, index) {
           final transaction = transactions[index];
-          // Convert amount to negative for expenses if needed
           final amount =
               isExpense && transaction['amount'] > 0
                   ? -(transaction['amount'] as double)
@@ -48,6 +47,7 @@ class FinancialTransactionList extends StatelessWidget {
             amount: amount,
             icon: transaction['icon'] as IconData,
             transactionData: {...transaction, 'amount': amount},
+            showMenu: false,
           );
         },
       ),
