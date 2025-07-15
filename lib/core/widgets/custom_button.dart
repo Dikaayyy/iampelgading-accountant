@@ -79,25 +79,25 @@ class CustomButton extends StatelessWidget {
                       valueColor: AlwaysStoppedAnimation<Color>(finalTextColor),
                     ),
                   ),
-                  const SizedBox(width: 10),
-                ],
-                Flexible(
-                  child: Text(
-                    text,
-                    style:
-                        textStyle ??
-                        AppTextStyles.h4.copyWith(
-                          color:
-                              isButtonEnabled
-                                  ? finalTextColor
-                                  : finalTextColor.withOpacity(1),
-                          fontSize: fontSize ?? 16,
-                          fontWeight: fontWeight ?? FontWeight.w500,
-                        ),
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
+                ] else ...[
+                  Flexible(
+                    child: Text(
+                      text,
+                      style:
+                          textStyle ??
+                          AppTextStyles.h4.copyWith(
+                            color:
+                                isButtonEnabled
+                                    ? finalTextColor
+                                    : finalTextColor.withOpacity(1),
+                            fontSize: fontSize ?? 16,
+                            fontWeight: fontWeight ?? FontWeight.w500,
+                          ),
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),

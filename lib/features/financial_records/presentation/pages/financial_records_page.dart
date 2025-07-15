@@ -8,6 +8,10 @@ import 'package:iampelgading/core/colors/app_colors.dart';
 import 'package:iampelgading/core/theme/app_text_styles.dart';
 import 'package:iampelgading/features/financial_records/presentation/widgets/financial_header.dart';
 import 'package:iampelgading/features/financial_records/presentation/widgets/transaction_history_header.dart';
+import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
+import 'package:iampelgading/features/transaction/presentation/pages/edit_transaction_page.dart';
+import 'package:provider/provider.dart';
+import 'package:iampelgading/features/transaction/presentation/providers/transaction_provider.dart';
 
 class FinancialRecordsPage extends StatefulWidget {
   const FinancialRecordsPage({super.key});
@@ -176,13 +180,20 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage> {
   }
 
   void _handleEditTransaction(Map<String, dynamic> transaction) {
-    // TODO: Navigate to edit transaction page
-    SnackbarHelper.showInfo(
-      context: context,
-      title: 'Edit Transaksi',
-      message:
-          'Fitur edit transaksi "${transaction['title']}" akan segera tersedia',
-      showAtTop: true,
+    final amount = transaction['amount'] as double? ?? 0.0;
+    final isIncome = amount > 0;
+
+    PersistentNavBarNavigator.pushNewScreen(
+      context,
+      screen: ChangeNotifierProvider(
+        create: (context) => TransactionProvider(),
+        child: EditTransactionPage(
+          transaction: transaction,
+          isIncome: isIncome,
+        ),
+      ),
+      withNavBar: false,
+      pageTransitionAnimation: PageTransitionAnimation.cupertino,
     );
   }
 

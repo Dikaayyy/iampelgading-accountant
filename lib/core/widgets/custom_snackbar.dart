@@ -195,9 +195,9 @@ class CustomSnackbar extends StatelessWidget {
       ),
       backgroundColor: Colors.transparent,
       elevation: 0,
-      behavior: SnackBarBehavior.fixed, // Changed to fixed
+      behavior: SnackBarBehavior.floating,
       duration: duration ?? const Duration(seconds: 4),
-      margin: EdgeInsets.zero,
+      margin: const EdgeInsets.all(16),
     );
 
     ScaffoldMessenger.of(context).showSnackBar(snackbar);

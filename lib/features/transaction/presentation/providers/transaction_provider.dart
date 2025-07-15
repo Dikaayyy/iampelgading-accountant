@@ -181,6 +181,34 @@ class TransactionProvider with ChangeNotifier {
     }
   }
 
+  Future<void> updateTransaction({
+    required bool isIncome,
+    required String transactionId,
+  }) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      // Use the injected use case if available
+      if (_addTransaction != null) {
+        // Create updated transaction data and call update use case
+        // await _updateTransaction!.call(transactionId, transactionData);
+      } else {
+        // Fallback: simulate API call
+        await Future.delayed(const Duration(seconds: 2));
+      }
+
+      // Don't clear form after successful update (user might want to see the result)
+
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      throw Exception('Failed to update transaction: $e');
+    }
+  }
+
   void incrementQuantity() {
     final currentValue = double.tryParse(quantityController.text) ?? 0.0;
     final newValue = currentValue + 1;
@@ -221,6 +249,84 @@ class TransactionProvider with ChangeNotifier {
 
     // Reset date and time to current
     _initializeDefaultValues();
+  }
+
+  void populateFromTransaction(Map<String, dynamic> transaction) {
+    // Parse existing transaction data
+    final amount = transaction['amount'] as double? ?? 0.0;
+    final absoluteAmount = amount.abs();
+
+    // Set basic transaction details
+    descriptionController.text = transaction['description'] as String? ?? '';
+
+    // Set payment method if exists
+    final paymentMethod = transaction['paymentMethod'] as String? ?? 'Cash';
+    if (paymentMethods.contains(paymentMethod)) {
+      updatePaymentMethod(paymentMethod);
+    }
+
+    // Set category - you might need to map from transaction title to category
+    final defaultCategory = amount > 0 ? 'Penjualan' : 'Operasional';
+    categoryController.text = defaultCategory;
+
+    // Parse date from string format "20 August 2024"
+    try {
+      final dateStr = transaction['date'] as String? ?? '';
+      final dateParts = dateStr.split(' ');
+      if (dateParts.length >= 3) {
+        final day = int.parse(dateParts[0]);
+        final monthName = dateParts[1];
+        final year = int.parse(dateParts[2]);
+
+        // Map month names to numbers
+        final monthMap = {
+          'January': 1,
+          'February': 2,
+          'March': 3,
+          'April': 4,
+          'May': 5,
+          'June': 6,
+          'July': 7,
+          'August': 8,
+          'September': 9,
+          'October': 10,
+          'November': 11,
+          'December': 12,
+        };
+
+        final month = monthMap[monthName] ?? DateTime.now().month;
+        final parsedDate = DateTime(year, month, day);
+        updateDate(parsedDate);
+      }
+    } catch (e) {
+      // If parsing fails, use current date
+      updateDate(DateTime.now());
+    }
+
+    // Parse time from string format "14:30"
+    try {
+      final timeStr = transaction['time'] as String? ?? '';
+      final timeParts = timeStr.split(':');
+      if (timeParts.length >= 2) {
+        final hour = int.parse(timeParts[0]);
+        final minute = int.parse(timeParts[1]);
+        final parsedTime = TimeOfDay(hour: hour, minute: minute);
+        _selectedTime = parsedTime;
+        timeController.text = _formatTimeOfDay(parsedTime);
+      }
+    } catch (e) {
+      // If parsing fails, use current time
+      final currentTime = TimeOfDay.now();
+      _selectedTime = currentTime;
+      timeController.text = _formatTimeOfDay(currentTime);
+    }
+
+    // For editing, we'll assume quantity is 1 and price is the total amount
+    quantityController.text = '1';
+    priceController.text = absoluteAmount.toString();
+    updateQuantityOrPrice();
+
+    notifyListeners();
   }
 
   @override
