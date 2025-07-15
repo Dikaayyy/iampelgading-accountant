@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:iampelgading/core/widgets/custom_search_field.dart';
 import 'package:iampelgading/core/widgets/unified_transaction_item.dart';
+import 'package:iampelgading/core/widgets/custom_bottom_sheet.dart';
+import 'package:iampelgading/core/widgets/snackbar_helper.dart'; // Add this import
 import 'package:iampelgading/features/dashboard/presentation/widgets/balance_card.dart';
-import 'package:iampelgading/features/dashboard/presentation/widgets/dashboard_header.dart';
 import 'package:iampelgading/core/colors/app_colors.dart';
 import 'package:iampelgading/core/theme/app_text_styles.dart';
 import 'package:iampelgading/features/financial_records/presentation/widgets/financial_header.dart';
@@ -172,17 +173,64 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage> {
   }
 
   void _handleDownloadPressed() {
-    // Show snackbar or implement download functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Download riwayat transaksi...'),
-        duration: Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-      ),
+    CustomBottomSheet.show(
+      context: context,
+      title: 'Ekspor Data Transaksi',
+      items: [
+        BottomSheetItem(
+          title: 'Ekspor ke CSV',
+          subtitle: 'Unduh data transaksi dalam format CSV',
+          icon: Icons.table_chart_outlined,
+          iconColor: const Color(0xFF40B029),
+          iconBackgroundColor: const Color(0xFF40B029).withOpacity(0.1),
+          onTap: () {
+            Navigator.of(context).pop();
+            _exportToCsv();
+          },
+        ),
+      ],
     );
+  }
 
-    // TODO: Implement actual download functionality
-    // This could call a use case or repository method
+  void _exportToCsv() {
+    // TODO: Implement actual CSV export functionality
+    try {
+      // Simulate the export process
+      Future.delayed(const Duration(seconds: 2), () {
+        if (mounted) {
+          // Simulate random success/failure for demo
+          final isSuccess = DateTime.now().millisecondsSinceEpoch % 2 == 0;
+
+          if (isSuccess) {
+            // Show success message at top
+            SnackbarHelper.showSuccess(
+              context: context,
+              title: 'Ekspor Berhasil',
+              message: 'Data transaksi berhasil diekspor ke CSV',
+              duration: const Duration(seconds: 3),
+              showAtTop: true, // Show at top
+            );
+          } else {
+            // Show error message at top
+            SnackbarHelper.showError(
+              context: context,
+              title: 'Ekspor Gagal',
+              message: 'Terjadi kesalahan saat mengekspor data',
+              duration: const Duration(seconds: 3),
+              showAtTop: true, // Show at top
+            );
+          }
+        }
+      });
+    } catch (e) {
+      // Handle any immediate errors at top
+      SnackbarHelper.showError(
+        context: context,
+        title: 'Error',
+        message: 'Terjadi kesalahan: ${e.toString()}',
+        showAtTop: true, // Show at top
+      );
+    }
   }
 
   Map<String, List<Map<String, dynamic>>> _getTransactionsGroupedByMonth() {
