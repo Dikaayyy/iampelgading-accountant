@@ -11,4 +11,7 @@ class AppAssets {
 
   //auth
   static const String cuate = 'assets/png/auth/cuate.png';
+
+  //financial records
+  static const String download = 'assets/svg/financial/download.svg';
 }

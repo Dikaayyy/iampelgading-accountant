@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:iampelgading/core/colors/app_colors.dart';
-import 'package:iampelgading/core/theme/app_text_styles.dart';
 import 'package:iampelgading/features/transaction/presentation/providers/transaction_provider.dart';
 
 class QuantityField extends StatelessWidget {
