@@ -415,6 +415,42 @@ class TransactionProvider with ChangeNotifier {
     }
   }
 
+  // Delete transaction
+  Future<void> deleteTransaction(String transactionId) async {
+    if (_deleteTransaction == null) return;
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      // Call API to delete transaction
+      await _deleteTransaction!.call(transactionId);
+
+      // Remove transaction from local list
+      _transactions.removeWhere(
+        (transaction) => transaction.id == transactionId,
+      );
+
+      // Refresh transactions from server to ensure we have the latest data
+      await loadTransactions();
+
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString();
+
+      // If unauthorized, handle logout
+      if (e.toString().contains('Unauthorized')) {
+        await _handleUnauthorized();
+      }
+
+      notifyListeners();
+      throw Exception('Failed to delete transaction: $e');
+    }
+  }
+
   // Fix updateQuantityFromText method
   void updateQuantityFromText(String value) {
     if (value.isEmpty) {

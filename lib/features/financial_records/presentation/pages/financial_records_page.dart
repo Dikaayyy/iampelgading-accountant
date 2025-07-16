@@ -300,19 +300,39 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage> {
     );
   }
 
-  void _confirmDeleteTransaction(Map<String, dynamic> transaction) {
-    // TODO: Implement actual delete functionality
-    SnackbarHelper.showSuccess(
-      context: context,
-      title: 'Transaksi Dihapus',
-      message: 'Transaksi "${transaction['title']}" berhasil dihapus',
-      showAtTop: true,
-    );
+  void _confirmDeleteTransaction(Map<String, dynamic> transaction) async {
+    final transactionId = transaction['id']?.toString();
 
-    setState(() {
-      // Refresh data after delete
-      context.read<TransactionProvider>().loadTransactions();
-    });
+    if (transactionId == null) {
+      SnackbarHelper.showError(
+        context: context,
+        title: 'Gagal Menghapus',
+        message: 'ID transaksi tidak valid',
+        showAtTop: true,
+      );
+      return;
+    }
+
+    try {
+      // Call the delete transaction method from provider
+      await context.read<TransactionProvider>().deleteTransaction(
+        transactionId,
+      );
+
+      SnackbarHelper.showSuccess(
+        context: context,
+        title: 'Transaksi Dihapus',
+        message: 'Transaksi "${transaction['title']}" berhasil dihapus',
+        showAtTop: true,
+      );
+    } catch (e) {
+      SnackbarHelper.showError(
+        context: context,
+        title: 'Gagal Menghapus',
+        message: 'Terjadi kesalahan saat menghapus transaksi',
+        showAtTop: true,
+      );
+    }
   }
 
   void _handleDownloadPressed() {
