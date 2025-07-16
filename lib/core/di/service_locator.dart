@@ -15,6 +15,8 @@ import 'package:iampelgading/features/transaction/data/repositories/transaction_
 import 'package:iampelgading/features/transaction/domain/repositories/transaction_repository.dart';
 import 'package:iampelgading/features/transaction/domain/usecases/add_transaction.dart';
 import 'package:iampelgading/features/transaction/domain/usecases/get_transactions_usecase.dart';
+import 'package:iampelgading/features/transaction/domain/usecases/update_transaction_usecase.dart';
+import 'package:iampelgading/features/transaction/domain/usecases/delete_transaction_usecase.dart';
 import 'package:iampelgading/features/transaction/presentation/providers/transaction_provider.dart';
 
 // Core
@@ -55,6 +57,8 @@ Future<void> init() async {
 
   sl.registerLazySingleton(() => AddTransaction(sl()));
   sl.registerLazySingleton(() => GetTransactions(sl()));
+  sl.registerLazySingleton(() => UpdateTransaction(sl()));
+  sl.registerLazySingleton(() => DeleteTransaction(sl()));
 
-  sl.registerFactory(() => TransactionProvider(sl(), sl()));
+  sl.registerLazySingleton(() => TransactionProvider(sl(), sl(), sl(), sl()));
 }

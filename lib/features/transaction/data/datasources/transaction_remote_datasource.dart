@@ -5,8 +5,8 @@ import 'package:iampelgading/core/services/auth_service.dart';
 
 abstract class TransactionRemoteDataSource {
   Future<List<TransactionModel>> getTransactions();
-  Future<void> addTransaction(TransactionModel transaction);
-  Future<void> updateTransaction(TransactionModel transaction);
+  Future<TransactionModel> addTransaction(TransactionModel transaction);
+  Future<TransactionModel> updateTransaction(TransactionModel transaction);
   Future<void> deleteTransaction(String id);
 }
 
@@ -50,16 +50,20 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
   }
 
   @override
-  Future<void> addTransaction(TransactionModel transaction) async {
+  Future<TransactionModel> addTransaction(TransactionModel transaction) async {
     try {
+      final requestBody = transaction.toJson();
+
       final response = await client.post(
         Uri.parse('$baseUrl/transactions'),
         headers: _getHeaders(),
-        body: json.encode(transaction.toJson()),
+        body: json.encode(requestBody),
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        return;
+        // Parse response to get the created transaction
+        final responseData = json.decode(response.body);
+        return TransactionModel.fromJson(responseData);
       } else if (response.statusCode == 401 || response.statusCode == 403) {
         throw Exception('Unauthorized: Please login again');
       } else {
@@ -71,16 +75,22 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
   }
 
   @override
-  Future<void> updateTransaction(TransactionModel transaction) async {
+  Future<TransactionModel> updateTransaction(
+    TransactionModel transaction,
+  ) async {
     try {
+      final requestBody = transaction.toJson();
+
       final response = await client.put(
         Uri.parse('$baseUrl/transactions/${transaction.id}'),
         headers: _getHeaders(),
-        body: json.encode(transaction.toJson()),
+        body: json.encode(requestBody),
       );
 
       if (response.statusCode == 200) {
-        return;
+        // Parse response to get the updated transaction
+        final responseData = json.decode(response.body);
+        return TransactionModel.fromJson(responseData);
       } else if (response.statusCode == 401 || response.statusCode == 403) {
         throw Exception('Unauthorized: Please login again');
       } else {

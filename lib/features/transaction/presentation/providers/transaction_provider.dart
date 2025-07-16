@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:iampelgading/features/transaction/domain/usecases/get_transactions_usecase.dart';
 import 'package:intl/intl.dart';
 import 'package:iampelgading/features/transaction/domain/usecases/add_transaction.dart';
+import 'package:iampelgading/features/transaction/domain/usecases/update_transaction_usecase.dart';
+import 'package:iampelgading/features/transaction/domain/usecases/delete_transaction_usecase.dart';
 import 'package:iampelgading/features/transaction/domain/entities/transaction.dart';
 import 'package:iampelgading/core/services/auth_service.dart';
 import 'package:iampelgading/core/di/service_locator.dart' as di;
@@ -9,6 +11,8 @@ import 'package:iampelgading/core/di/service_locator.dart' as di;
 class TransactionProvider with ChangeNotifier {
   final AddTransaction? _addTransaction;
   final GetTransactions? _getTransactions;
+  final UpdateTransaction? _updateTransaction;
+  final DeleteTransaction? _deleteTransaction;
 
   // Controllers
   final TextEditingController dateController = TextEditingController();
@@ -53,22 +57,26 @@ class TransactionProvider with ChangeNotifier {
   ];
 
   List<String> get incomeCategories => [
-    'Penjualan',
-    'Jasa',
-    'Investasi',
-    'Bonus',
-    'Lainnya',
+    'Pendapatan Tiket Wisata',
+    'Pendapatan Parkir',
+    'Pendapatan Camping',
+    'Pendapatan Lain-lain',
   ];
 
   List<String> get expenseCategories => [
-    'Operasional',
-    'Pemeliharaan',
-    'Konsumsi',
-    'Transport',
-    'Lainnya',
+    'Beban Gaji/Honor',
+    'Beban Kebersihan',
+    'Beban Perlengkapan/ATK',
+    'Beban Listrik dan Air',
+    'Beban Lain-lain',
   ];
 
-  TransactionProvider([this._addTransaction, this._getTransactions]) {
+  TransactionProvider([
+    this._addTransaction,
+    this._getTransactions,
+    this._updateTransaction,
+    this._deleteTransaction,
+  ]) {
     _initializeDefaultValues();
     quantityController.text = '0';
     // Load transactions when provider is initialized
@@ -169,6 +177,15 @@ class TransactionProvider with ChangeNotifier {
     return DateFormat('HH:mm').format(dateTime);
   }
 
+  // Add this helper method
+  String _formatNumber(double number) {
+    if (number == number.roundToDouble()) {
+      return number.toInt().toString();
+    } else {
+      return number.toString();
+    }
+  }
+
   void _initializeDefaultValues() {
     try {
       _selectedDate = DateTime.now();
@@ -187,23 +204,17 @@ class TransactionProvider with ChangeNotifier {
 
       _selectedTime = TimeOfDay.now();
       try {
-        // Try to use context if available
-        final context = navigatorKey.currentContext;
-        if (context != null) {
-          timeController.text = _selectedTime.format(context);
-        } else {
-          timeController.text =
-              '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}';
-        }
+        timeController.text =
+            '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}';
       } catch (e) {
         timeController.text =
             '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}';
       }
     } catch (e) {
-      dateController.text = DateFormat(
-        'dd MMMM yyyy',
-        'en_US',
-      ).format(_selectedDate);
+      // Fallback initialization
+      _selectedDate = DateTime.now();
+      _selectedTime = TimeOfDay.now();
+      dateController.text = DateFormat('dd MMMM yyyy').format(_selectedDate);
       timeController.text =
           '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}';
     }
@@ -265,6 +276,19 @@ class TransactionProvider with ChangeNotifier {
     return null;
   }
 
+  // Update resetForm method
+  void resetForm() {
+    quantityController.text = '1'; // Default to 1 instead of 0
+    priceController.clear();
+    descriptionController.clear();
+    categoryController.clear();
+    _selectedPaymentMethod = null;
+    _totalAmount = 0.0;
+    _initializeDefaultValues();
+    notifyListeners();
+  }
+
+  // Update saveTransaction method
   Future<void> saveTransaction({required bool isIncome}) async {
     _isLoading = true;
     _errorMessage = null;
@@ -272,12 +296,21 @@ class TransactionProvider with ChangeNotifier {
 
     try {
       if (_addTransaction != null) {
+        // Combine date and time
+        final DateTime combinedDateTime = DateTime(
+          _selectedDate.year,
+          _selectedDate.month,
+          _selectedDate.day,
+          _selectedTime.hour,
+          _selectedTime.minute,
+        );
+
         // Create transaction entity
         final transaction = Transaction(
           title: categoryController.text,
           amount: isIncome ? _totalAmount : -_totalAmount,
           category: categoryController.text,
-          date: _selectedDate,
+          date: combinedDateTime,
           paymentMethod: _selectedPaymentMethod ?? 'Cash',
           description: descriptionController.text,
           isIncome: isIncome,
@@ -285,15 +318,22 @@ class TransactionProvider with ChangeNotifier {
           pricePerItem: double.tryParse(priceController.text) ?? 0.0,
         );
 
-        await _addTransaction!.call(transaction);
+        // Call API to create transaction
+        final createdTransaction = await _addTransaction!.call(transaction);
 
-        // Refresh transactions after adding
+        // Add the created transaction to local list
+        _transactions.add(createdTransaction);
+
+        // Refresh transactions from server to ensure we have the latest data
         await loadTransactions();
+
+        // Clear form after successful save
+        resetForm();
       } else {
         await Future.delayed(const Duration(seconds: 2));
+        resetForm();
       }
 
-      _clearForm();
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -310,6 +350,7 @@ class TransactionProvider with ChangeNotifier {
     }
   }
 
+  // Update updateTransaction method to return the updated transaction
   Future<void> updateTransaction({
     required bool isIncome,
     required String transactionId,
@@ -319,9 +360,41 @@ class TransactionProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      if (_addTransaction != null) {
-        // For now, we'll treat update as add since the API structure might be different
-        await saveTransaction(isIncome: isIncome);
+      if (_updateTransaction != null) {
+        // Combine date and time
+        final DateTime combinedDateTime = DateTime(
+          _selectedDate.year,
+          _selectedDate.month,
+          _selectedDate.day,
+          _selectedTime.hour,
+          _selectedTime.minute,
+        );
+
+        // Create transaction entity
+        final transaction = Transaction(
+          id: transactionId,
+          title: categoryController.text,
+          amount: isIncome ? _totalAmount : -_totalAmount,
+          category: categoryController.text,
+          date: combinedDateTime,
+          paymentMethod: _selectedPaymentMethod ?? 'Cash',
+          description: descriptionController.text,
+          isIncome: isIncome,
+          quantity: int.tryParse(quantityController.text) ?? 0,
+          pricePerItem: double.tryParse(priceController.text) ?? 0.0,
+        );
+
+        // Call API to update transaction
+        final updatedTransaction = await _updateTransaction!.call(transaction);
+
+        // Update the transaction in local list
+        final index = _transactions.indexWhere((t) => t.id == transactionId);
+        if (index != -1) {
+          _transactions[index] = updatedTransaction;
+        }
+
+        // Refresh transactions from server to ensure we have the latest data
+        await loadTransactions();
       } else {
         await Future.delayed(const Duration(seconds: 2));
       }
@@ -342,22 +415,7 @@ class TransactionProvider with ChangeNotifier {
     }
   }
 
-  void incrementQuantity() {
-    final currentValue = double.tryParse(quantityController.text) ?? 0.0;
-    final newValue = currentValue + 1;
-    quantityController.text = newValue.toInt().toString();
-    updateQuantityOrPrice();
-  }
-
-  void decrementQuantity() {
-    final currentValue = double.tryParse(quantityController.text) ?? 0.0;
-    if (currentValue > 0) {
-      final newValue = currentValue - 1;
-      quantityController.text = newValue.toInt().toString();
-      updateQuantityOrPrice();
-    }
-  }
-
+  // Fix updateQuantityFromText method
   void updateQuantityFromText(String value) {
     if (value.isEmpty) {
       quantityController.text = '0';
@@ -365,25 +423,46 @@ class TransactionProvider with ChangeNotifier {
       final numValue = double.tryParse(value);
       if (numValue == null || numValue < 0) {
         quantityController.text = '0';
+      } else {
+        // Remove .0 if it's a whole number
+        if (numValue == numValue.roundToDouble()) {
+          quantityController.text = numValue.toInt().toString();
+        } else {
+          quantityController.text = numValue.toString();
+        }
       }
     }
     updateQuantityOrPrice();
   }
 
-  void _clearForm() {
-    quantityController.text = '0';
-    priceController.clear();
-    descriptionController.clear();
-    categoryController.clear();
-    _selectedPaymentMethod = null;
-    _totalAmount = 0.0;
-    _initializeDefaultValues();
+  // Fix incrementQuantity method
+  void incrementQuantity() {
+    final currentValue = double.tryParse(quantityController.text) ?? 0.0;
+    final newValue = currentValue + 1;
+    quantityController.text =
+        newValue.toInt().toString(); // Always show as integer
+    updateQuantityOrPrice();
   }
 
+  // Fix decrementQuantity method
+  void decrementQuantity() {
+    final currentValue = double.tryParse(quantityController.text) ?? 0.0;
+    if (currentValue > 0) {
+      final newValue = currentValue - 1;
+      quantityController.text =
+          newValue.toInt().toString(); // Always show as integer
+      updateQuantityOrPrice();
+    }
+  }
+
+  // Fix populateFromTransaction method
   void populateFromTransaction(Map<String, dynamic> transaction) {
     final amount = transaction['amount'] as double? ?? 0.0;
     final absoluteAmount = amount.abs();
+    final isIncome = amount > 0;
 
+    // Set the controllers with transaction data
+    priceController.text = absoluteAmount.toString();
     descriptionController.text = transaction['description'] as String? ?? '';
 
     final paymentMethod = transaction['paymentMethod'] as String? ?? 'Cash';
@@ -391,69 +470,88 @@ class TransactionProvider with ChangeNotifier {
       updatePaymentMethod(paymentMethod);
     }
 
-    final defaultCategory = amount > 0 ? 'Penjualan' : 'Operasional';
-    categoryController.text = defaultCategory;
+    // Fix category selection - use the actual category from transaction
+    final transactionCategory = transaction['category'] as String? ?? '';
+    final availableCategories = isIncome ? incomeCategories : expenseCategories;
+
+    // Set category based on what's available in the dropdown
+    if (transactionCategory.isNotEmpty &&
+        availableCategories.contains(transactionCategory)) {
+      categoryController.text = transactionCategory;
+    } else {
+      // Use default category if transaction category is not in available list
+      categoryController.text =
+          isIncome ? incomeCategories.first : expenseCategories.first;
+    }
 
     try {
       final dateStr = transaction['date'] as String? ?? '';
-      final dateParts = dateStr.split(' ');
-      if (dateParts.length >= 3) {
-        final monthNames = {
-          'January': 1,
-          'February': 2,
-          'March': 3,
-          'April': 4,
-          'May': 5,
-          'June': 6,
-          'July': 7,
-          'August': 8,
-          'September': 9,
-          'October': 10,
-          'November': 11,
-          'December': 12,
-        };
-
-        final day = int.tryParse(dateParts[0]) ?? 1;
-        final month = monthNames[dateParts[1]] ?? 1;
-        final year = int.tryParse(dateParts[2]) ?? DateTime.now().year;
-
-        final parsedDate = DateTime(year, month, day);
-        updateDate(parsedDate);
+      // Parse date from format "16 Juli 2025" or similar
+      if (dateStr.isNotEmpty) {
+        try {
+          // Try to parse Indonesian date format
+          final date = DateFormat('d MMMM yyyy', 'id_ID').parse(dateStr);
+          updateDate(date);
+        } catch (e) {
+          // If that fails, try other formats
+          try {
+            final date = DateFormat('dd MMMM yyyy', 'id_ID').parse(dateStr);
+            updateDate(date);
+          } catch (e2) {
+            // If all fails, use current date
+            updateDate(DateTime.now());
+          }
+        }
+      } else {
+        updateDate(DateTime.now());
       }
     } catch (e) {
       updateDate(DateTime.now());
     }
 
+    // Parse and set time
     final timeStr = transaction['time'] as String? ?? '';
     try {
-      final timeParts = timeStr.split(':');
-      if (timeParts.length >= 2) {
-        final hour = int.tryParse(timeParts[0]) ?? 0;
-        final minute = int.tryParse(timeParts[1]) ?? 0;
-        final timeOfDay = TimeOfDay(hour: hour, minute: minute);
+      if (timeStr.isNotEmpty) {
+        final timeParts = timeStr.split(':');
+        if (timeParts.length >= 2) {
+          final hour = int.tryParse(timeParts[0]) ?? 0;
+          final minute = int.tryParse(timeParts[1]) ?? 0;
+          final timeOfDay = TimeOfDay(hour: hour, minute: minute);
 
-        // Use a more robust way to format time
-        final context = navigatorKey.currentContext;
-        if (context != null) {
-          updateTime(timeOfDay, context);
-        } else {
+          // Update time properly
           _selectedTime = timeOfDay;
           timeController.text =
               '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+          notifyListeners();
         }
+      } else {
+        final now = TimeOfDay.now();
+        _selectedTime = now;
+        timeController.text =
+            '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+        notifyListeners();
       }
     } catch (e) {
-      _selectedTime = TimeOfDay.now();
+      final now = TimeOfDay.now();
+      _selectedTime = now;
       timeController.text =
-          '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}';
+          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+      notifyListeners();
     }
 
+    // Set quantity and price
     final quantity = transaction['quantity'] as int? ?? 1;
     final pricePerItem =
         transaction['pricePerItem'] as double? ?? absoluteAmount;
 
     quantityController.text = quantity.toString();
-    priceController.text = pricePerItem.toString();
+    // Fix: Remove .0 from price display
+    if (pricePerItem == pricePerItem.roundToDouble()) {
+      priceController.text = pricePerItem.toInt().toString();
+    } else {
+      priceController.text = pricePerItem.toString();
+    }
 
     updateQuantityOrPrice();
     notifyListeners();

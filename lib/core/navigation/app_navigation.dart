@@ -17,6 +17,14 @@ class AppNavigation extends StatefulWidget {
 
 class _AppNavigationState extends State<AppNavigation> {
   DateTime? _lastPressedAt;
+  late final TransactionProvider _transactionProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    // Get the singleton instance
+    _transactionProvider = di.sl<TransactionProvider>();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,8 +36,8 @@ class _AppNavigationState extends State<AppNavigation> {
         // Handle back button press - show exit confirmation
         _onWillPop();
       },
-      child: ChangeNotifierProvider(
-        create: (_) => di.sl<TransactionProvider>(),
+      child: ChangeNotifierProvider.value(
+        value: _transactionProvider,
         child: CustomBottomNavbar(
           screens: [
             const DashboardPage(),

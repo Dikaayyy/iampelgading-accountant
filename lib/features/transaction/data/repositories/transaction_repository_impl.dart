@@ -19,20 +19,24 @@ class TransactionRepositoryImpl implements TransactionRepository {
   }
 
   @override
-  Future<void> addTransaction(Transaction transaction) async {
+  Future<Transaction> addTransaction(Transaction transaction) async {
     try {
       final model = TransactionModel.fromEntity(transaction);
-      await remoteDataSource.addTransaction(model);
+      final createdTransaction = await remoteDataSource.addTransaction(model);
+      return createdTransaction;
     } catch (e) {
       throw Exception('Failed to add transaction: $e');
     }
   }
 
   @override
-  Future<void> updateTransaction(Transaction transaction) async {
+  Future<Transaction> updateTransaction(Transaction transaction) async {
     try {
       final model = TransactionModel.fromEntity(transaction);
-      await remoteDataSource.updateTransaction(model);
+      final updatedTransaction = await remoteDataSource.updateTransaction(
+        model,
+      );
+      return updatedTransaction;
     } catch (e) {
       throw Exception('Failed to update transaction: $e');
     }

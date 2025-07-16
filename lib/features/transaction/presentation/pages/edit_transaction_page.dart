@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iampelgading/core/colors/app_colors.dart';
+import 'package:iampelgading/core/managers/snackbar_manager.dart';
 import 'package:iampelgading/core/utils/currency_formater.dart';
 import 'package:iampelgading/core/widgets/custom_app_bar.dart';
 import 'package:iampelgading/core/widgets/custom_button.dart';
@@ -10,7 +11,6 @@ import 'package:iampelgading/features/transaction/presentation/widgets/date_time
 import 'package:iampelgading/features/transaction/presentation/widgets/payment_method.dart';
 import 'package:iampelgading/features/transaction/presentation/widgets/quantity_field.dart';
 import 'package:provider/provider.dart';
-import 'package:iampelgading/core/widgets/custom_snackbar.dart';
 
 class EditTransactionPage extends StatefulWidget {
   final Map<String, dynamic> transaction;
@@ -28,13 +28,20 @@ class EditTransactionPage extends StatefulWidget {
 
 class _EditTransactionPageState extends State<EditTransactionPage> {
   final _formKey = GlobalKey<FormState>();
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
+
+    // Initialize form with transaction data
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<TransactionProvider>();
-      provider.populateFromTransaction(widget.transaction);
+      if (!_isInitialized) {
+        final provider = context.read<TransactionProvider>();
+        // Populate form with existing transaction data
+        provider.populateFromTransaction(widget.transaction);
+        _isInitialized = true;
+      }
     });
   }
 
@@ -193,24 +200,22 @@ class _EditTransactionPageState extends State<EditTransactionPage> {
         );
 
         if (context.mounted) {
-          CustomSnackbar.showSuccess(
+          SnackbarManager.showSuccess(
             context: context,
             title: 'Berhasil',
             message:
                 widget.isIncome
                     ? 'Pemasukan berhasil diperbarui'
                     : 'Pengeluaran berhasil diperbarui',
-            showAtTop: true,
           );
           Navigator.of(context).pop();
         }
       } catch (e) {
         if (context.mounted) {
-          CustomSnackbar.showError(
+          SnackbarManager.showError(
             context: context,
-            title: 'Gagal',
-            message: 'Gagal memperbarui transaksi: ${e.toString()}',
-            showAtTop: true,
+            error: e,
+            customTitle: 'Gagal Memperbarui',
           );
         }
       }

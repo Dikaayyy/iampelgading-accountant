@@ -70,18 +70,18 @@ class TransactionModel extends Transaction {
     return DateTime.now();
   }
 
+  // Updated toJson method to match API format
   Map<String, dynamic> toJson() {
+    // Format date as YYYY-MM-DD
+    final formattedDate =
+        '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
     return {
-      'id': id,
-      'title': title,
-      'amount': amount,
-      'category': category,
-      'date': date.toIso8601String(),
-      'paymentMethod': paymentMethod,
-      'description': description,
-      'isIncome': isIncome,
-      'quantity': quantity,
-      'pricePerItem': pricePerItem,
+      'tanggal': formattedDate,
+      'pengeluaran': isIncome ? null : amount.abs().toInt(),
+      'pemasukan': isIncome ? amount.toInt() : null,
+      'nama_akun': title,
+      'keterangan': description,
     };
   }
 

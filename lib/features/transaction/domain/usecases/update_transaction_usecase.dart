@@ -1,12 +1,12 @@
 import 'package:iampelgading/features/transaction/domain/entities/transaction.dart';
 import 'package:iampelgading/features/transaction/domain/repositories/transaction_repository.dart';
 
-class AddTransaction {
+class UpdateTransaction {
   final TransactionRepository repository;
 
-  AddTransaction(this.repository);
+  UpdateTransaction(this.repository);
 
   Future<Transaction> call(Transaction transaction) async {
-    return await repository.addTransaction(transaction);
+    return await repository.updateTransaction(transaction);
   }
 }

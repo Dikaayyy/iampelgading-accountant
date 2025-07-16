@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iampelgading/core/colors/app_colors.dart';
+import 'package:iampelgading/core/managers/snackbar_manager.dart';
 import 'package:iampelgading/core/utils/currency_formater.dart';
 import 'package:iampelgading/core/widgets/custom_app_bar.dart';
 import 'package:iampelgading/core/widgets/custom_button.dart';
@@ -22,15 +23,21 @@ class TransactionPage extends StatefulWidget {
 
 class _AddTransactionPageState extends State<TransactionPage> {
   final _formKey = GlobalKey<FormState>();
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
+
+    // Initialize form only once when page is created
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<TransactionProvider>();
-      // Set real-time default values
-      provider.updateDate(DateTime.now());
-      provider.updateTime(TimeOfDay.now(), context);
+      if (!_isInitialized) {
+        final provider = context.read<TransactionProvider>();
+        provider.resetForm();
+        provider.updateDate(DateTime.now());
+        provider.updateTime(TimeOfDay.now(), context);
+        _isInitialized = true;
+      }
     });
   }
 
@@ -183,27 +190,22 @@ class _AddTransactionPageState extends State<TransactionPage> {
         await provider.saveTransaction(isIncome: widget.isIncome);
 
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
+          SnackbarManager.showSuccess(
+            context: context,
+            title: 'Berhasil',
+            message:
                 widget.isIncome
                     ? 'Pemasukan berhasil disimpan'
                     : 'Pengeluaran berhasil disimpan',
-              ),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-            ),
           );
           Navigator.of(context).pop();
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Gagal menyimpan transaksi: ${e.toString()}'),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-            ),
+          SnackbarManager.showError(
+            context: context,
+            error: e,
+            customTitle: 'Gagal Menyimpan',
           );
         }
       }
