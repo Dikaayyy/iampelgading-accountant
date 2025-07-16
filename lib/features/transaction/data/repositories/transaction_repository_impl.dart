@@ -1,44 +1,49 @@
+import 'package:iampelgading/features/transaction/data/datasources/transaction_remote_datasource.dart';
 import 'package:iampelgading/features/transaction/data/models/transaction_model.dart';
 import 'package:iampelgading/features/transaction/domain/entities/transaction.dart';
 import 'package:iampelgading/features/transaction/domain/repositories/transaction_repository.dart';
 
 class TransactionRepositoryImpl implements TransactionRepository {
-  // For now, using in-memory storage
-  final List<TransactionModel> _transactions = [];
+  final TransactionRemoteDataSource remoteDataSource;
 
-  @override
-  Future<void> addTransaction(Transaction transaction) async {
-    final model = TransactionModel.fromEntity(transaction);
-    final newModel = TransactionModel(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      title: model.title,
-      amount: model.amount,
-      category: model.category,
-      date: model.date,
-      paymentMethod: model.paymentMethod,
-      description: model.description,
-      isIncome: model.isIncome,
-      quantity: model.quantity,
-      pricePerItem: model.pricePerItem,
-    );
-    _transactions.add(newModel);
-  }
+  TransactionRepositoryImpl({required this.remoteDataSource});
 
   @override
   Future<List<Transaction>> getTransactions() async {
-    return _transactions;
+    try {
+      final remoteTransactions = await remoteDataSource.getTransactions();
+      return remoteTransactions;
+    } catch (e) {
+      throw Exception('Failed to get transactions: $e');
+    }
+  }
+
+  @override
+  Future<void> addTransaction(Transaction transaction) async {
+    try {
+      final model = TransactionModel.fromEntity(transaction);
+      await remoteDataSource.addTransaction(model);
+    } catch (e) {
+      throw Exception('Failed to add transaction: $e');
+    }
   }
 
   @override
   Future<void> updateTransaction(Transaction transaction) async {
-    final index = _transactions.indexWhere((t) => t.id == transaction.id);
-    if (index != -1) {
-      _transactions[index] = TransactionModel.fromEntity(transaction);
+    try {
+      final model = TransactionModel.fromEntity(transaction);
+      await remoteDataSource.updateTransaction(model);
+    } catch (e) {
+      throw Exception('Failed to update transaction: $e');
     }
   }
 
   @override
   Future<void> deleteTransaction(String id) async {
-    _transactions.removeWhere((t) => t.id == id);
+    try {
+      await remoteDataSource.deleteTransaction(id);
+    } catch (e) {
+      throw Exception('Failed to delete transaction: $e');
+    }
   }
 }

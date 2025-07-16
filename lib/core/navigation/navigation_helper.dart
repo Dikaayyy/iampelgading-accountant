@@ -6,8 +6,6 @@ import 'package:iampelgading/core/navigation/navigation_service.dart';
 import 'package:iampelgading/core/colors/app_colors.dart';
 import 'package:iampelgading/core/theme/app_text_styles.dart';
 import 'package:iampelgading/features/transaction/presentation/providers/transaction_provider.dart';
-import 'package:iampelgading/features/transaction/domain/usecases/add_transaction.dart';
-import 'package:iampelgading/features/transaction/data/repositories/transaction_repository_impl.dart';
 
 class NavigationHelper {
   static const int homeIndex = 0;
@@ -48,21 +46,14 @@ class NavigationHelper {
     );
   }
 
-  // Navigate to add transaction page
+  // Navigate to add transaction page - using existing provider
   static void navigateToAddTransactionPage(
     BuildContext context, {
     required bool isIncome,
   }) {
-    // Create dependencies
-    final repository = TransactionRepositoryImpl();
-    final addTransaction = AddTransaction(repository);
-
     PersistentNavBarNavigator.pushNewScreen(
       context,
-      screen: ChangeNotifierProvider(
-        create: (_) => TransactionProvider(addTransaction),
-        child: TransactionPage(isIncome: isIncome),
-      ),
+      screen: TransactionPage(isIncome: isIncome),
       withNavBar: false,
       pageTransitionAnimation: PageTransitionAnimation.cupertino,
     );

@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:iampelgading/features/transaction/domain/usecases/get_transactions_usecase.dart';
 import 'package:intl/intl.dart';
 import 'package:iampelgading/features/transaction/domain/usecases/add_transaction.dart';
+import 'package:iampelgading/features/transaction/domain/entities/transaction.dart';
+import 'package:iampelgading/core/services/auth_service.dart';
+import 'package:iampelgading/core/di/service_locator.dart' as di;
 
 class TransactionProvider with ChangeNotifier {
   final AddTransaction? _addTransaction;
+  final GetTransactions? _getTransactions;
 
   // Controllers
   final TextEditingController dateController = TextEditingController();
@@ -22,12 +27,20 @@ class TransactionProvider with ChangeNotifier {
   String? _selectedPaymentMethod;
   double _totalAmount = 0.0;
 
+  // Transactions list
+  List<Transaction> _transactions = [];
+  bool _isLoadingTransactions = false;
+  String? _errorMessage;
+
   // Getters
   DateTime get selectedDate => _selectedDate;
   TimeOfDay get selectedTime => _selectedTime;
   bool get isLoading => _isLoading;
+  bool get isLoadingTransactions => _isLoadingTransactions;
   String? get selectedPaymentMethod => _selectedPaymentMethod;
   double get totalAmount => _totalAmount;
+  List<Transaction> get transactions => _transactions;
+  String? get errorMessage => _errorMessage;
 
   // Lists
   List<String> get paymentMethods => [
@@ -55,18 +68,111 @@ class TransactionProvider with ChangeNotifier {
     'Lainnya',
   ];
 
-  TransactionProvider([this._addTransaction]) {
+  TransactionProvider([this._addTransaction, this._getTransactions]) {
     _initializeDefaultValues();
-    // Set default quantity to 0
     quantityController.text = '0';
+    // Load transactions when provider is initialized
+    loadTransactions();
+  }
+
+  // Load transactions from API
+  Future<void> loadTransactions() async {
+    if (_getTransactions == null) return;
+
+    _isLoadingTransactions = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      _transactions = await _getTransactions!.call();
+      _isLoadingTransactions = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoadingTransactions = false;
+      _errorMessage = e.toString();
+
+      // If unauthorized, handle logout
+      if (e.toString().contains('Unauthorized')) {
+        await _handleUnauthorized();
+      }
+
+      notifyListeners();
+      throw Exception('Failed to load transactions: $e');
+    }
+  }
+
+  // Handle unauthorized access
+  Future<void> _handleUnauthorized() async {
+    try {
+      final authService = di.sl<AuthService>();
+      await authService.logout();
+      // Navigate to login page would be handled by the UI
+    } catch (e) {
+      // Handle logout error
+    }
+  }
+
+  // Refresh transactions
+  Future<void> refreshTransactions() async {
+    await loadTransactions();
+  }
+
+  // Clear error message
+  void clearError() {
+    _errorMessage = null;
+    notifyListeners();
+  }
+
+  // Get transactions grouped by month for UI
+  Map<String, List<Transaction>> getTransactionsGroupedByMonth() {
+    final Map<String, List<Transaction>> grouped = {};
+
+    for (final transaction in _transactions) {
+      final monthKey = DateFormat(
+        'MMMM yyyy',
+        'id_ID',
+      ).format(transaction.date);
+
+      if (!grouped.containsKey(monthKey)) {
+        grouped[monthKey] = [];
+      }
+      grouped[monthKey]!.add(transaction);
+    }
+
+    // Sort transactions within each month by date (newest first)
+    grouped.forEach((month, transactions) {
+      transactions.sort((a, b) => b.date.compareTo(a.date));
+    });
+
+    return grouped;
+  }
+
+  // Convert Transaction to Map for UI compatibility
+  Map<String, dynamic> transactionToMap(Transaction transaction) {
+    return {
+      'id': transaction.id,
+      'title': transaction.title,
+      'time': _formatTimeOnly(transaction.date),
+      'date': DateFormat('dd MMMM yyyy', 'id_ID').format(transaction.date),
+      'amount': transaction.amount,
+      'icon': transaction.isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+      'paymentMethod': transaction.paymentMethod,
+      'description': transaction.description,
+      'category': transaction.category,
+      'quantity': transaction.quantity,
+      'pricePerItem': transaction.pricePerItem,
+    };
+  }
+
+  // Add this helper method
+  String _formatTimeOnly(DateTime dateTime) {
+    return DateFormat('HH:mm').format(dateTime);
   }
 
   void _initializeDefaultValues() {
     try {
-      // Set default date to today
       _selectedDate = DateTime.now();
 
-      // Try to format with Indonesian locale, fallback to English if not available
       try {
         dateController.text = DateFormat(
           'dd MMMM yyyy',
@@ -79,24 +185,28 @@ class TransactionProvider with ChangeNotifier {
         ).format(_selectedDate);
       }
 
-      // Set default time to current time
       _selectedTime = TimeOfDay.now();
-      timeController.text = _formatTimeOfDay(_selectedTime);
+      try {
+        // Try to use context if available
+        final context = navigatorKey.currentContext;
+        if (context != null) {
+          timeController.text = _selectedTime.format(context);
+        } else {
+          timeController.text =
+              '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}';
+        }
+      } catch (e) {
+        timeController.text =
+            '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}';
+      }
     } catch (e) {
-      // Fallback values if initialization fails
-      _selectedDate = DateTime.now();
-      _selectedTime = TimeOfDay.now();
-      dateController.text =
-          '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}';
-      timeController.text = _formatTimeOfDay(_selectedTime);
+      dateController.text = DateFormat(
+        'dd MMMM yyyy',
+        'en_US',
+      ).format(_selectedDate);
+      timeController.text =
+          '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}';
     }
-  }
-
-  // Helper method to format TimeOfDay without context
-  String _formatTimeOfDay(TimeOfDay time) {
-    final hour = time.hour.toString().padLeft(2, '0');
-    final minute = time.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
   }
 
   void updateDate(DateTime date) {
@@ -157,25 +267,44 @@ class TransactionProvider with ChangeNotifier {
 
   Future<void> saveTransaction({required bool isIncome}) async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
     try {
-      // Use the injected use case if available
       if (_addTransaction != null) {
-        // Create transaction data and call use case
-        // await _addTransaction!.call(transactionData);
+        // Create transaction entity
+        final transaction = Transaction(
+          title: categoryController.text,
+          amount: isIncome ? _totalAmount : -_totalAmount,
+          category: categoryController.text,
+          date: _selectedDate,
+          paymentMethod: _selectedPaymentMethod ?? 'Cash',
+          description: descriptionController.text,
+          isIncome: isIncome,
+          quantity: int.tryParse(quantityController.text) ?? 0,
+          pricePerItem: double.tryParse(priceController.text) ?? 0.0,
+        );
+
+        await _addTransaction!.call(transaction);
+
+        // Refresh transactions after adding
+        await loadTransactions();
       } else {
-        // Fallback: simulate API call
         await Future.delayed(const Duration(seconds: 2));
       }
 
-      // Clear form after successful save
       _clearForm();
-
       _isLoading = false;
       notifyListeners();
     } catch (e) {
       _isLoading = false;
+      _errorMessage = e.toString();
+
+      // If unauthorized, handle logout
+      if (e.toString().contains('Unauthorized')) {
+        await _handleUnauthorized();
+      }
+
       notifyListeners();
       rethrow;
     }
@@ -186,24 +315,28 @@ class TransactionProvider with ChangeNotifier {
     required String transactionId,
   }) async {
     _isLoading = true;
+    _errorMessage = null;
     notifyListeners();
 
     try {
-      // Use the injected use case if available
       if (_addTransaction != null) {
-        // Create updated transaction data and call update use case
-        // await _updateTransaction!.call(transactionId, transactionData);
+        // For now, we'll treat update as add since the API structure might be different
+        await saveTransaction(isIncome: isIncome);
       } else {
-        // Fallback: simulate API call
         await Future.delayed(const Duration(seconds: 2));
       }
-
-      // Don't clear form after successful update (user might want to see the result)
 
       _isLoading = false;
       notifyListeners();
     } catch (e) {
       _isLoading = false;
+      _errorMessage = e.toString();
+
+      // If unauthorized, handle logout
+      if (e.toString().contains('Unauthorized')) {
+        await _handleUnauthorized();
+      }
+
       notifyListeners();
       throw Exception('Failed to update transaction: $e');
     }
@@ -226,7 +359,6 @@ class TransactionProvider with ChangeNotifier {
   }
 
   void updateQuantityFromText(String value) {
-    // Validate that it's a valid number
     if (value.isEmpty) {
       quantityController.text = '0';
     } else {
@@ -239,47 +371,34 @@ class TransactionProvider with ChangeNotifier {
   }
 
   void _clearForm() {
-    // Reset to default values
-    quantityController.text = '0'; // Set default to 0
+    quantityController.text = '0';
     priceController.clear();
     descriptionController.clear();
     categoryController.clear();
     _selectedPaymentMethod = null;
     _totalAmount = 0.0;
-
-    // Reset date and time to current
     _initializeDefaultValues();
   }
 
   void populateFromTransaction(Map<String, dynamic> transaction) {
-    // Parse existing transaction data
     final amount = transaction['amount'] as double? ?? 0.0;
     final absoluteAmount = amount.abs();
 
-    // Set basic transaction details
     descriptionController.text = transaction['description'] as String? ?? '';
 
-    // Set payment method if exists
     final paymentMethod = transaction['paymentMethod'] as String? ?? 'Cash';
     if (paymentMethods.contains(paymentMethod)) {
       updatePaymentMethod(paymentMethod);
     }
 
-    // Set category - you might need to map from transaction title to category
     final defaultCategory = amount > 0 ? 'Penjualan' : 'Operasional';
     categoryController.text = defaultCategory;
 
-    // Parse date from string format "20 August 2024"
     try {
       final dateStr = transaction['date'] as String? ?? '';
       final dateParts = dateStr.split(' ');
       if (dateParts.length >= 3) {
-        final day = int.parse(dateParts[0]);
-        final monthName = dateParts[1];
-        final year = int.parse(dateParts[2]);
-
-        // Map month names to numbers
-        final monthMap = {
+        final monthNames = {
           'January': 1,
           'February': 2,
           'March': 3,
@@ -294,49 +413,52 @@ class TransactionProvider with ChangeNotifier {
           'December': 12,
         };
 
-        final month = monthMap[monthName] ?? DateTime.now().month;
+        final day = int.tryParse(dateParts[0]) ?? 1;
+        final month = monthNames[dateParts[1]] ?? 1;
+        final year = int.tryParse(dateParts[2]) ?? DateTime.now().year;
+
         final parsedDate = DateTime(year, month, day);
         updateDate(parsedDate);
       }
     } catch (e) {
-      // If parsing fails, use current date
       updateDate(DateTime.now());
     }
 
-    // Parse time from string format "14:30"
+    final timeStr = transaction['time'] as String? ?? '';
     try {
-      final timeStr = transaction['time'] as String? ?? '';
       final timeParts = timeStr.split(':');
       if (timeParts.length >= 2) {
-        final hour = int.parse(timeParts[0]);
-        final minute = int.parse(timeParts[1]);
-        final parsedTime = TimeOfDay(hour: hour, minute: minute);
-        _selectedTime = parsedTime;
-        timeController.text = _formatTimeOfDay(parsedTime);
+        final hour = int.tryParse(timeParts[0]) ?? 0;
+        final minute = int.tryParse(timeParts[1]) ?? 0;
+        final timeOfDay = TimeOfDay(hour: hour, minute: minute);
+
+        // Use a more robust way to format time
+        final context = navigatorKey.currentContext;
+        if (context != null) {
+          updateTime(timeOfDay, context);
+        } else {
+          _selectedTime = timeOfDay;
+          timeController.text =
+              '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+        }
       }
     } catch (e) {
-      // If parsing fails, use current time
-      final currentTime = TimeOfDay.now();
-      _selectedTime = currentTime;
-      timeController.text = _formatTimeOfDay(currentTime);
+      _selectedTime = TimeOfDay.now();
+      timeController.text =
+          '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}';
     }
 
-    // For editing, we'll assume quantity is 1 and price is the total amount
-    quantityController.text = '1';
-    priceController.text = absoluteAmount.toString();
-    updateQuantityOrPrice();
+    final quantity = transaction['quantity'] as int? ?? 1;
+    final pricePerItem =
+        transaction['pricePerItem'] as double? ?? absoluteAmount;
 
+    quantityController.text = quantity.toString();
+    priceController.text = pricePerItem.toString();
+
+    updateQuantityOrPrice();
     notifyListeners();
   }
-
-  @override
-  void dispose() {
-    dateController.dispose();
-    timeController.dispose();
-    quantityController.dispose();
-    priceController.dispose();
-    descriptionController.dispose();
-    categoryController.dispose();
-    super.dispose();
-  }
 }
+
+// Global navigator key for context access
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

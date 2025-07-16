@@ -15,18 +15,59 @@ class TransactionModel extends Transaction {
   });
 
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
+    final pemasukan = json['pemasukan'] as int?;
+    final pengeluaran = json['pengeluaran'] as int?;
+    final isIncome = (pemasukan != null && pemasukan > 0);
+    final amount =
+        isIncome ? pemasukan.toDouble() : -(pengeluaran?.toDouble() ?? 0.0);
+
     return TransactionModel(
-      id: json['id'],
-      title: json['title'],
-      amount: json['amount'].toDouble(),
-      category: json['category'],
-      date: DateTime.parse(json['date']),
-      paymentMethod: json['paymentMethod'],
-      description: json['description'],
-      isIncome: json['isIncome'],
-      quantity: json['quantity'],
-      pricePerItem: json['pricePerItem'].toDouble(),
+      id: json['id']?.toString(),
+      title: json['nama_akun'] ?? '',
+      amount: amount,
+      category: isIncome ? 'Penjualan' : 'Operasional',
+      date: _parseDateTime(json['tanggal'] ?? '', json['Waktu'] ?? ''),
+      paymentMethod: 'Cash',
+      description: json['keterangan'] ?? '',
+      isIncome: isIncome,
+      quantity: 1,
+      pricePerItem: amount.abs(),
     );
+  }
+
+  static DateTime _parseDateTime(String dateString, String timeString) {
+    try {
+      // Parse date from format "12-07-2025"
+      final dateParts = dateString.split('-');
+      if (dateParts.length == 3) {
+        final day = int.parse(dateParts[0]);
+        final month = int.parse(dateParts[1]);
+        final year = int.parse(dateParts[2]);
+
+        // Parse time from ISO format "2025-07-16T05:59:54.000Z"
+        if (timeString.isNotEmpty) {
+          try {
+            final timeDate = DateTime.parse(timeString);
+            return DateTime(
+              year,
+              month,
+              day,
+              timeDate.hour,
+              timeDate.minute,
+              timeDate.second,
+            );
+          } catch (e) {
+            // If time parsing fails, use date only
+            return DateTime(year, month, day);
+          }
+        }
+
+        return DateTime(year, month, day);
+      }
+    } catch (e) {
+      // If parsing fails, return current date
+    }
+    return DateTime.now();
   }
 
   Map<String, dynamic> toJson() {

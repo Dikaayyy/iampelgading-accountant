@@ -3,6 +3,9 @@ import 'package:iampelgading/features/financial_records/presentation/widgets/fin
 import 'package:iampelgading/features/financial_records/presentation/widgets/financial_transaction_list.dart';
 import 'package:iampelgading/core/widgets/custom_search_field.dart';
 import 'package:iampelgading/core/widgets/custom_app_bar.dart';
+import 'package:provider/provider.dart';
+import 'package:iampelgading/features/transaction/presentation/providers/transaction_provider.dart';
+import 'package:intl/intl.dart';
 
 class FinancialRecordsPage extends StatefulWidget {
   const FinancialRecordsPage({super.key});
@@ -20,6 +23,11 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+
+    // Load transactions when page initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TransactionProvider>().loadTransactions();
+    });
   }
 
   @override
@@ -41,116 +49,109 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 24),
+      body: Consumer<TransactionProvider>(
+        builder: (context, provider, child) {
+          return Column(
+            children: [
+              const SizedBox(height: 24),
 
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: CustomSearchField(
-              controller: _searchController,
-              hintText: 'Cari transaksi...',
-              onChanged: (value) {
-                // Implement search functionality here
-                setState(() {
-                  // Filter your transactions based on search value
-                });
-              },
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Tab Bar
-          FinancialTabBar(tabController: _tabController),
-
-          const SizedBox(height: 16),
-
-          // Tab View Content
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                // Pengeluaran (Expenses)
-                FinancialTransactionList(
-                  transactions: _getExpenseTransactions(),
-                  isExpense: true,
+              // Search Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: CustomSearchField(
+                  controller: _searchController,
+                  hintText: 'Cari transaksi...',
+                  onChanged: (value) {
+                    setState(() {
+                      // Filter transactions based on search value
+                    });
+                  },
                 ),
-                // Pemasukan (Income)
-                FinancialTransactionList(
-                  transactions: _getIncomeTransactions(),
-                  isExpense: false,
+              ),
+
+              const SizedBox(height: 20),
+
+              // Tab Bar
+              FinancialTabBar(tabController: _tabController),
+
+              const SizedBox(height: 16),
+
+              // Tab View Content
+              Expanded(
+                child: TabBarView(
+                  controller: _tabController,
+                  children: [
+                    // Pengeluaran (Expenses)
+                    _buildExpenseTab(provider),
+                    // Pemasukan (Income)
+                    _buildIncomeTab(provider),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  List<Map<String, dynamic>> _getExpenseTransactions() {
-    return [
-      {
-        'title': 'Pemeliharaan Fasilitas',
-        'time': '10:15',
-        'date': '20 August 2024',
-        'amount': 250000.0,
-        'icon': Icons.build,
-        'paymentMethod': 'Cash',
-        'description': 'Pemeliharaan rutin fasilitas wisata',
-      },
-      {
-        'title': 'Biaya Kebersihan',
-        'time': '09:00',
-        'date': '19 August 2024',
-        'amount': 75000.0,
-        'icon': Icons.cleaning_services,
-        'paymentMethod': 'Transfer Bank',
-        'description': 'Biaya kebersihan harian',
-      },
-      {
-        'title': 'Konsumsi Staff',
-        'time': '13:23',
-        'date': '18 August 2024',
-        'amount': 550000.0,
-        'icon': Icons.restaurant,
-        'paymentMethod': 'Cash',
-        'description': 'Konsumsi untuk staff selama 1 minggu',
-      },
-    ];
+  Widget _buildExpenseTab(TransactionProvider provider) {
+    if (provider.isLoadingTransactions) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final expenseTransactions =
+        provider.transactions
+            .where((transaction) => !transaction.isIncome)
+            .map((transaction) => provider.transactionToMap(transaction))
+            .toList();
+
+    if (expenseTransactions.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text('Belum ada pengeluaran'),
+          ],
+        ),
+      );
+    }
+
+    return FinancialTransactionList(
+      transactions: expenseTransactions,
+      isExpense: true,
+    );
   }
 
-  List<Map<String, dynamic>> _getIncomeTransactions() {
-    return [
-      {
-        'title': 'Tiket Masuk Wisata',
-        'time': '14:30',
-        'date': '20 August 2024',
-        'amount': 500000.0,
-        'icon': Icons.confirmation_number,
-        'paymentMethod': 'Cash',
-        'description': 'Penjualan tiket masuk wisata hari ini',
-      },
-      {
-        'title': 'Penjualan Souvenir',
-        'time': '16:45',
-        'date': '19 August 2024',
-        'amount': 150000.0,
-        'icon': Icons.shopping_bag,
-        'paymentMethod': 'QRIS',
-        'description': 'Penjualan souvenir dan merchandise',
-      },
-      {
-        'title': 'Parkir Kendaraan',
-        'time': '08:30',
-        'date': '18 August 2024',
-        'amount': 50000.0,
-        'icon': Icons.local_parking,
-        'paymentMethod': 'Cash',
-        'description': 'Biaya parkir kendaraan pengunjung',
-      },
-    ];
+  Widget _buildIncomeTab(TransactionProvider provider) {
+    if (provider.isLoadingTransactions) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final incomeTransactions =
+        provider.transactions
+            .where((transaction) => transaction.isIncome)
+            .map((transaction) => provider.transactionToMap(transaction))
+            .toList();
+
+    if (incomeTransactions.isEmpty) {
+      return const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey),
+            SizedBox(height: 16),
+            Text('Belum ada pemasukan'),
+          ],
+        ),
+      );
+    }
+
+    return FinancialTransactionList(
+      transactions: incomeTransactions,
+      isExpense: false,
+    );
   }
 }

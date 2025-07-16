@@ -68,58 +68,59 @@ class _LoginViewState extends State<LoginView> {
     );
   }
 
+  // Instead of heavy transformations, use optimized assets
   Widget _buildTopSection() {
     return Stack(
       children: [
-        // Rectangle SVG background - mirrored and scaled
-        Positioned(
-          left: 100, // Adjust position karena ukuran bertambah
-          top: 150, // Adjust position
-          child: Transform.scale(
-            scaleX: -2.0, // Mirror dan scale horizontal 2x
-            scaleY: 2.0, // Scale vertical 2x
-            child: SvgPicture.asset(AppAssets.rectangle, fit: BoxFit.cover),
+        // Use a simple colored container or optimized background
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.base, AppColors.base.withOpacity(0.8)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
           ),
         ),
 
-        // Main content
+        // Simplified content
         Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Spacer to push cuate down
-              const SizedBox(height: 150),
-
-              // App logo/image - Direct PNG without decoration
-              Flexible(
-                child: SizedBox(
-                  width: 280,
-                  height: 280,
-                  child: Image.asset(
-                    AppAssets.cuate,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        width: 280,
-                        height: 280,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.person,
-                          size: 140,
-                          color: AppColors.base,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
+              const SizedBox(height: 100),
+              // Optimized image loading
+              _buildOptimizedLogo(),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildOptimizedLogo() {
+    return Flexible(
+      child: SizedBox(
+        width: 280,
+        height: 280,
+        child: Image.asset(
+          AppAssets.cuate,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              width: 280,
+              height: 280,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.person, size: 140, color: AppColors.base),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -246,9 +247,6 @@ class _LoginViewState extends State<LoginView> {
   Future<void> _handleLogin(BuildContext context, AuthProvider provider) async {
     if (_formKey.currentState?.validate() ?? false) {
       try {
-        // Show loading snackbar
-        SnackbarManager.showLoginLoading(context: context);
-
         await provider.login();
 
         if (context.mounted) {

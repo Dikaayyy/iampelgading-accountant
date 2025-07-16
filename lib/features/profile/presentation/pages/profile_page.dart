@@ -33,101 +33,98 @@ class _ProfileViewState extends State<ProfileView> {
       backgroundColor: const Color(0xFFFCFBFA),
       body: Consumer<ProfileProvider>(
         builder: (context, provider, child) {
-          return RefreshIndicator(
-            onRefresh: provider.refreshProfile,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: SizedBox(
-                width: double.infinity,
-                height: 890,
-                child: Stack(
-                  children: [
-                    ProfileHeader(screenWidth: screenWidth),
+          return SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: SizedBox(
+              width: double.infinity,
+              height: 890,
+              child: Stack(
+                children: [
+                  ProfileHeader(screenWidth: screenWidth),
 
-                    Positioned(
-                      left: 0,
-                      top: 222,
-                      child: SizedBox(
-                        width: screenWidth,
-                        child: ProfileMenuSection(
-                          currentUsername: provider.userName,
-                          currentImageUrl: provider.profileImageUrl,
-                          onProfileUpdated: (username, imageUrl) {
-                            provider.updateUserName(username);
-                            if (imageUrl != null) {
-                              provider.updateProfileImage(imageUrl);
-                            }
-                          },
-                          onChangePassword: provider.onChangePassword,
-                          onChangeUsername: provider.onChangeUsername,
-                          onAppInfo: provider.onAppInfo,
+                  Positioned(
+                    left: 0,
+                    top: 222,
+                    child: SizedBox(
+                      width: screenWidth,
+                      child: ProfileMenuSection(
+                        currentUsername: provider.userName,
+                        currentImageUrl: provider.profileImageUrl,
+                        onProfileUpdated: (username, imageUrl) {
+                          provider.updateUserName(username);
+                          if (imageUrl != null) {
+                            provider.updateProfileImage(imageUrl);
+                          }
+                        },
+                        onChangePassword: provider.onChangePassword,
+                        onChangeUsername: provider.onChangeUsername,
+                        onAppInfo: provider.onAppInfo,
+                      ),
+                    ),
+                  ),
+
+                  Positioned.fill(
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 166),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 111,
+                              height: 111,
+                              decoration: const ShapeDecoration(
+                                color: Color(0xFFFFB74D),
+                                shape: OvalBorder(),
+                              ),
+                              child: ClipOval(
+                                child:
+                                    provider.profileImageUrl.isNotEmpty
+                                        ? Image.network(
+                                          provider.profileImageUrl,
+                                          width: 111,
+                                          height: 111,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (
+                                            context,
+                                            error,
+                                            stackTrace,
+                                          ) {
+                                            return const Icon(
+                                              Icons.person,
+                                              size: 60,
+                                              color: Colors.white,
+                                            );
+                                          },
+                                        )
+                                        : const Icon(
+                                          Icons.person,
+                                          size: 60,
+                                          color: Colors.white,
+                                        ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              provider.userName,
+                              style: AppTextStyles.h4.copyWith(
+                                color: const Color(0xFF343434),
+                                fontWeight: FontWeight.w500,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ),
                       ),
                     ),
+                  ),
 
-                    Positioned.fill(
-                      child: Align(
-                        alignment: Alignment.topCenter,
-                        child: Container(
-                          margin: const EdgeInsets.only(top: 166),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 111,
-                                height: 111,
-                                decoration: const ShapeDecoration(
-                                  color: Color(0xFFFFB74D),
-                                  shape: OvalBorder(),
-                                ),
-                                child: ClipOval(
-                                  child:
-                                      provider.profileImageUrl.isNotEmpty
-                                          ? Image.network(
-                                            provider.profileImageUrl,
-                                            width: 111,
-                                            height: 111,
-                                            fit: BoxFit.cover,
-                                            errorBuilder: (
-                                              context,
-                                              error,
-                                              stackTrace,
-                                            ) {
-                                              return const Icon(
-                                                Icons.person,
-                                                size: 60,
-                                                color: Colors.white,
-                                              );
-                                            },
-                                          )
-                                          : const Icon(
-                                            Icons.person,
-                                            size: 60,
-                                            color: Colors.white,
-                                          ),
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                provider.userName,
-                                style: AppTextStyles.h4.copyWith(
-                                  color: const Color(0xFF343434),
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                textAlign: TextAlign.center,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                  if (provider.isLoading)
+                    const Positioned.fill(
+                      child: Center(child: CircularProgressIndicator()),
                     ),
-
-                    if (provider.isLoading)
-                      const Positioned.fill(
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
-                  ],
-                ),
+                ],
               ),
             ),
           );

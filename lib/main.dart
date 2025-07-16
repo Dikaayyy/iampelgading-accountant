@@ -24,7 +24,10 @@ class MainApp extends StatelessWidget {
       title: 'Akuntansi Iampelgading',
       theme: AppTheme.lightTheme,
       home: const LoginPage(),
+      navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
     );
   }
 }
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();

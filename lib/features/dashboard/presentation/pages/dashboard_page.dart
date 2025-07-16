@@ -7,6 +7,7 @@ import 'package:iampelgading/features/dashboard/presentation/widgets/dashboard_h
 import 'package:iampelgading/features/dashboard/presentation/widgets/transaction_section.dart';
 import 'package:iampelgading/features/dashboard/presentation/pages/financial_records_page.dart';
 import 'package:iampelgading/features/financial_records/presentation/pages/transaction_detail_page.dart';
+import 'package:iampelgading/features/transaction/presentation/providers/transaction_provider.dart';
 import 'package:provider/provider.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -14,9 +15,15 @@ class DashboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => DashboardProvider(),
-      child: const DashboardView(),
+    return Consumer<TransactionProvider>(
+      builder: (context, transactionProvider, child) {
+        return ChangeNotifierProvider(
+          create:
+              (_) =>
+                  DashboardProvider(transactionProvider: transactionProvider),
+          child: const DashboardView(),
+        );
+      },
     );
   }
 }
@@ -32,49 +39,97 @@ class _DashboardViewState extends State<DashboardView> {
   bool _isBalanceVisible = true;
 
   @override
+  void initState() {
+    super.initState();
+    // Load transactions when dashboard initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TransactionProvider>().loadTransactions();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background[200],
-      body: Consumer<DashboardProvider>(
-        builder: (context, provider, child) {
+      body: Consumer2<DashboardProvider, TransactionProvider>(
+        builder: (context, dashboardProvider, transactionProvider, child) {
           return RefreshIndicator(
-            onRefresh: provider.refreshDashboard,
+            onRefresh: dashboardProvider.refreshDashboard,
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
               child: Column(
                 children: [
                   // Header Section with Overlapping Balance Card
-                  _buildHeaderWithBalanceCard(provider),
+                  _buildHeaderWithBalanceCard(dashboardProvider),
 
                   const SizedBox(height: 24),
 
                   // Transaction List Section
                   TransactionSection(
-                    transactions: _getMockTransactions(),
-                    isLoading: provider.isLoading,
+                    transactions: dashboardProvider.recentTransactionsAsMap,
+                    isLoading:
+                        dashboardProvider.isLoading ||
+                        transactionProvider.isLoadingTransactions,
                     onViewAllTap: () {
+                      // Navigate to the correct FinancialRecordsPage with tabs
                       PersistentNavBarNavigator.pushNewScreen(
                         context,
-                        screen: const FinancialRecordsPage(),
-                        withNavBar: false, // This hides the bottom navbar
+                        screen: ChangeNotifierProvider.value(
+                          value: transactionProvider,
+                          child: const FinancialRecordsPage(),
+                        ),
+                        withNavBar: false,
                         pageTransitionAnimation:
                             PageTransitionAnimation.cupertino,
                       );
                     },
                     onTransactionTap: (transaction) {
-                      // Navigate to transaction detail from dashboard
                       PersistentNavBarNavigator.pushNewScreen(
                         context,
                         screen: TransactionDetailPage(
                           transaction: transaction,
                           isExpense: (transaction['amount'] as double) < 0,
                         ),
-                        withNavBar: false, // This hides the bottom navbar
+                        withNavBar: false,
                         pageTransitionAnimation:
                             PageTransitionAnimation.cupertino,
                       );
                     },
                   ),
+
+                  // Show empty state if no transactions
+                  if (dashboardProvider.recentTransactions.isEmpty &&
+                      !transactionProvider.isLoadingTransactions)
+                    Container(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.receipt_long_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Belum ada transaksi',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.grey[600],
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Transaksi yang Anda tambahkan akan muncul di sini',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[500],
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -117,55 +172,5 @@ class _DashboardViewState extends State<DashboardView> {
         ],
       ),
     );
-  }
-
-  List<Map<String, dynamic>> _getMockTransactions() {
-    return [
-      {
-        'title': 'Tiket Masuk Wisata',
-        'time': '14:30',
-        'date': '20 August 2024',
-        'amount': 500000.0,
-        'icon': Icons.confirmation_number,
-        'paymentMethod': 'Cash',
-        'description': 'Penjualan tiket masuk wisata hari ini',
-      },
-      {
-        'title': 'Pemeliharaan Fasilitas',
-        'time': '10:15',
-        'date': '20 August 2024',
-        'amount': -250000.0,
-        'icon': Icons.build,
-        'paymentMethod': 'Cash',
-        'description': 'Pemeliharaan rutin fasilitas wisata',
-      },
-      {
-        'title': 'Penjualan Souvenir',
-        'time': '16:45',
-        'date': '19 August 2024',
-        'amount': 150000.0,
-        'icon': Icons.shopping_bag,
-        'paymentMethod': 'QRIS',
-        'description': 'Penjualan souvenir dan merchandise',
-      },
-      {
-        'title': 'Biaya Kebersihan',
-        'time': '09:00',
-        'date': '19 August 2024',
-        'amount': -75000.0,
-        'icon': Icons.cleaning_services,
-        'paymentMethod': 'Transfer Bank',
-        'description': 'Biaya kebersihan harian',
-      },
-      {
-        'title': 'Parkir Kendaraan',
-        'time': '08:30',
-        'date': '18 August 2024',
-        'amount': 50000.0,
-        'icon': Icons.local_parking,
-        'paymentMethod': 'Cash',
-        'description': 'Biaya parkir kendaraan pengunjung',
-      },
-    ];
   }
 }
