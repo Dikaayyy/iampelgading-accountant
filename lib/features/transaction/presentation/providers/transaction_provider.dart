@@ -607,7 +607,7 @@ class TransactionProvider with ChangeNotifier {
     if (pricePerItem == pricePerItem.roundToDouble()) {
       priceController.text = pricePerItem.toInt().toString();
     } else {
-      pricePerItem.toString();
+      priceController.text = pricePerItem.toString();
     }
 
     updateQuantityOrPrice();
