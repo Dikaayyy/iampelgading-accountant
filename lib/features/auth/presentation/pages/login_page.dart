@@ -213,28 +213,6 @@ class _LoginViewState extends State<LoginView> {
                   ),
 
                   const SizedBox(height: 16),
-
-                  // Error message (keep this as fallback)
-                  if (provider.errorMessage.isNotEmpty)
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.error[50],
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: AppColors.error[200]!,
-                          width: 1,
-                        ),
-                      ),
-                      child: Text(
-                        provider.errorMessage,
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.error[600],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
                 ],
               ),
             ),

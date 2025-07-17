@@ -160,15 +160,17 @@ class TransactionProvider with ChangeNotifier {
     return {
       'id': transaction.id,
       'title': transaction.title,
-      'time': _formatTimeOnly(transaction.date),
-      'date': DateFormat('dd MMMM yyyy', 'id_ID').format(transaction.date),
       'amount': transaction.amount,
-      'icon': transaction.isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-      'paymentMethod': transaction.paymentMethod,
-      'description': transaction.description,
       'category': transaction.category,
+      'description': transaction.description,
+      'paymentMethod': transaction.paymentMethod,
       'quantity': transaction.quantity,
       'pricePerItem': transaction.pricePerItem,
+      'date': DateFormat('d MMMM yyyy', 'id_ID').format(transaction.date),
+      'time': DateFormat(
+        'HH:mm',
+      ).format(transaction.date), // Use actual transaction time
+      'icon': transaction.isIncome ? Icons.trending_up : Icons.trending_down,
     };
   }
 
@@ -203,13 +205,9 @@ class TransactionProvider with ChangeNotifier {
       }
 
       _selectedTime = TimeOfDay.now();
-      try {
-        timeController.text =
-            '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}';
-      } catch (e) {
-        timeController.text =
-            '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}';
-      }
+      // Format time as HH:MM for display
+      timeController.text =
+          '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}';
     } catch (e) {
       // Fallback initialization
       _selectedDate = DateTime.now();
@@ -232,7 +230,9 @@ class TransactionProvider with ChangeNotifier {
 
   void updateTime(TimeOfDay time, BuildContext context) {
     _selectedTime = time;
-    timeController.text = time.format(context);
+    // Always format as HH:MM regardless of locale
+    timeController.text =
+        '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
     notifyListeners();
   }
 
@@ -288,7 +288,7 @@ class TransactionProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Update saveTransaction method
+  // Fix saveTransaction method
   Future<void> saveTransaction({required bool isIncome}) async {
     _isLoading = true;
     _errorMessage = null;
@@ -296,7 +296,7 @@ class TransactionProvider with ChangeNotifier {
 
     try {
       if (_addTransaction != null) {
-        // Combine date and time
+        // Combine date and time properly
         final DateTime combinedDateTime = DateTime(
           _selectedDate.year,
           _selectedDate.month,
@@ -314,9 +314,14 @@ class TransactionProvider with ChangeNotifier {
           paymentMethod: _selectedPaymentMethod ?? 'Cash',
           description: descriptionController.text,
           isIncome: isIncome,
-          quantity: int.tryParse(quantityController.text) ?? 0,
+          quantity: int.tryParse(quantityController.text) ?? 1,
           pricePerItem: double.tryParse(priceController.text) ?? 0.0,
         );
+
+        // Debug: Print what we're sending
+        print('Sending transaction with date: ${combinedDateTime.toString()}');
+        print('Selected date: $_selectedDate');
+        print('Selected time: $_selectedTime');
 
         // Call API to create transaction
         final createdTransaction = await _addTransaction!.call(transaction);
@@ -324,7 +329,7 @@ class TransactionProvider with ChangeNotifier {
         // Add the created transaction to local list
         _transactions.add(createdTransaction);
 
-        // Refresh transactions from server to ensure we have the latest data
+        // Refresh transactions from server
         await loadTransactions();
 
         // Clear form after successful save
@@ -350,7 +355,7 @@ class TransactionProvider with ChangeNotifier {
     }
   }
 
-  // Update updateTransaction method to return the updated transaction
+  // Fix updateTransaction method
   Future<void> updateTransaction({
     required bool isIncome,
     required String transactionId,
@@ -361,7 +366,7 @@ class TransactionProvider with ChangeNotifier {
 
     try {
       if (_updateTransaction != null) {
-        // Combine date and time
+        // Combine date and time properly
         final DateTime combinedDateTime = DateTime(
           _selectedDate.year,
           _selectedDate.month,
@@ -380,20 +385,23 @@ class TransactionProvider with ChangeNotifier {
           paymentMethod: _selectedPaymentMethod ?? 'Cash',
           description: descriptionController.text,
           isIncome: isIncome,
-          quantity: int.tryParse(quantityController.text) ?? 0,
+          quantity: int.tryParse(quantityController.text) ?? 1,
           pricePerItem: double.tryParse(priceController.text) ?? 0.0,
         );
+
+        // Debug: Print what we're sending
+        print('Updating transaction with date: ${combinedDateTime.toString()}');
 
         // Call API to update transaction
         final updatedTransaction = await _updateTransaction!.call(transaction);
 
-        // Update the transaction in local list
+        // Update local list
         final index = _transactions.indexWhere((t) => t.id == transactionId);
         if (index != -1) {
           _transactions[index] = updatedTransaction;
         }
 
-        // Refresh transactions from server to ensure we have the latest data
+        // Refresh transactions from server
         await loadTransactions();
       } else {
         await Future.delayed(const Duration(seconds: 2));
@@ -491,7 +499,7 @@ class TransactionProvider with ChangeNotifier {
     }
   }
 
-  // Fix populateFromTransaction method
+  // Fix populateFromTransaction method to properly handle date/time parsing
   void populateFromTransaction(Map<String, dynamic> transaction) {
     final amount = transaction['amount'] as double? ?? 0.0;
     final absoluteAmount = amount.abs();
@@ -515,65 +523,78 @@ class TransactionProvider with ChangeNotifier {
         availableCategories.contains(transactionCategory)) {
       categoryController.text = transactionCategory;
     } else {
-      // Use default category if transaction category is not in available list
       categoryController.text =
-          isIncome ? incomeCategories.first : expenseCategories.first;
+          availableCategories.isNotEmpty ? availableCategories.first : '';
     }
 
+    // Parse and set date from the transaction date string
     try {
       final dateStr = transaction['date'] as String? ?? '';
-      // Parse date from format "16 Juli 2025" or similar
       if (dateStr.isNotEmpty) {
+        // Try to parse date in format "dd MMMM yyyy"
         try {
-          // Try to parse Indonesian date format
-          final date = DateFormat('d MMMM yyyy', 'id_ID').parse(dateStr);
-          updateDate(date);
+          final parsedDate = DateFormat('dd MMMM yyyy', 'id_ID').parse(dateStr);
+          _selectedDate = parsedDate;
+          dateController.text = dateStr;
         } catch (e) {
-          // If that fails, try other formats
-          try {
-            final date = DateFormat('dd MMMM yyyy', 'id_ID').parse(dateStr);
-            updateDate(date);
-          } catch (e2) {
-            // If all fails, use current date
-            updateDate(DateTime.now());
-          }
+          // If parsing fails, use current date
+          _selectedDate = DateTime.now();
+          dateController.text = DateFormat(
+            'dd MMMM yyyy',
+            'id_ID',
+          ).format(_selectedDate);
         }
       } else {
-        updateDate(DateTime.now());
+        _selectedDate = DateTime.now();
+        dateController.text = DateFormat(
+          'dd MMMM yyyy',
+          'id_ID',
+        ).format(_selectedDate);
       }
     } catch (e) {
-      updateDate(DateTime.now());
+      _selectedDate = DateTime.now();
+      dateController.text = DateFormat(
+        'dd MMMM yyyy',
+        'id_ID',
+      ).format(_selectedDate);
     }
 
-    // Parse and set time
-    final timeStr = transaction['time'] as String? ?? '';
+    // Parse and set time from the transaction time string - USE DATABASE TIME
     try {
-      if (timeStr.isNotEmpty) {
+      final timeStr = transaction['time'] as String? ?? '';
+      print('Parsing time from transaction: "$timeStr"');
+
+      if (timeStr.isNotEmpty && timeStr != '00:00' && timeStr != 'null') {
+        // Parse time in format "HH:mm" or "HH:mm:ss"
         final timeParts = timeStr.split(':');
         if (timeParts.length >= 2) {
           final hour = int.tryParse(timeParts[0]) ?? 0;
           final minute = int.tryParse(timeParts[1]) ?? 0;
-          final timeOfDay = TimeOfDay(hour: hour, minute: minute);
 
-          // Update time properly
-          _selectedTime = timeOfDay;
+          // Use the actual time from database
+          _selectedTime = TimeOfDay(hour: hour, minute: minute);
           timeController.text =
               '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
-          notifyListeners();
+
+          print(
+            'Set time from database: ${_selectedTime.hour}:${_selectedTime.minute}',
+          );
+        } else {
+          // If time format is invalid, use 00:00
+          _selectedTime = const TimeOfDay(hour: 0, minute: 0);
+          timeController.text = '00:00';
+          print('Invalid time format, using 00:00');
         }
       } else {
-        final now = TimeOfDay.now();
-        _selectedTime = now;
-        timeController.text =
-            '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-        notifyListeners();
+        // If time is empty or null, use 00:00
+        _selectedTime = const TimeOfDay(hour: 0, minute: 0);
+        timeController.text = '00:00';
+        print('Empty time, using 00:00');
       }
     } catch (e) {
-      final now = TimeOfDay.now();
-      _selectedTime = now;
-      timeController.text =
-          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
-      notifyListeners();
+      print('Error parsing time: $e');
+      _selectedTime = const TimeOfDay(hour: 0, minute: 0);
+      timeController.text = '00:00';
     }
 
     // Set quantity and price
@@ -586,7 +607,7 @@ class TransactionProvider with ChangeNotifier {
     if (pricePerItem == pricePerItem.roundToDouble()) {
       priceController.text = pricePerItem.toInt().toString();
     } else {
-      priceController.text = pricePerItem.toString();
+      pricePerItem.toString();
     }
 
     updateQuantityOrPrice();
