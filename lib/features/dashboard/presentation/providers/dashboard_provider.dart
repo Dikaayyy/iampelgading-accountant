@@ -33,13 +33,25 @@ class DashboardProvider with ChangeNotifier {
 
   double get netIncome => totalIncome - totalExpense;
 
-  // Get recent transactions (last 5)
+  // Get recent transactions (filtered by today's date only)
   List<Transaction> get recentTransactions {
     if (_transactionProvider == null) return [];
 
-    final transactions = List<Transaction>.from(
-      _transactionProvider.transactions,
-    );
+    final today = DateTime.now();
+    final todayStart = DateTime(today.year, today.month, today.day);
+    final todayEnd = DateTime(today.year, today.month, today.day, 23, 59, 59);
+
+    final transactions =
+        _transactionProvider.transactions
+            .where(
+              (transaction) =>
+                  transaction.date.isAfter(
+                    todayStart.subtract(Duration(seconds: 1)),
+                  ) &&
+                  transaction.date.isBefore(todayEnd.add(Duration(seconds: 1))),
+            )
+            .toList();
+
     transactions.sort((a, b) => b.date.compareTo(a.date));
     return transactions.take(5).toList();
   }
