@@ -36,6 +36,11 @@ class TransactionProvider with ChangeNotifier {
   bool _isLoadingTransactions = false;
   String? _errorMessage;
 
+  // Filtered transactions for display purposes
+  List<Transaction> _filteredTransactions = [];
+  String _searchQuery = '';
+  String? _selectedFilter;
+
   // Getters
   DateTime get selectedDate => _selectedDate;
   TimeOfDay get selectedTime => _selectedTime;
@@ -43,7 +48,11 @@ class TransactionProvider with ChangeNotifier {
   bool get isLoadingTransactions => _isLoadingTransactions;
   String? get selectedPaymentMethod => _selectedPaymentMethod;
   double get totalAmount => _totalAmount;
-  List<Transaction> get transactions => _transactions;
+  List<Transaction> get transactions => _transactions; // Always all data
+  List<Transaction> get filteredTransactions =>
+      _filteredTransactions; // For display
+  String get searchQuery => _searchQuery;
+  String? get selectedFilter => _selectedFilter;
   String? get errorMessage => _errorMessage;
 
   // Lists
@@ -93,13 +102,13 @@ class TransactionProvider with ChangeNotifier {
 
     try {
       _transactions = await _getTransactions!.call();
+      _applyFilters(); // Apply current filters to new data
       _isLoadingTransactions = false;
       notifyListeners();
     } catch (e) {
       _isLoadingTransactions = false;
       _errorMessage = e.toString();
 
-      // If unauthorized, handle logout
       if (e.toString().contains('Unauthorized')) {
         await _handleUnauthorized();
       }
@@ -131,11 +140,89 @@ class TransactionProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Get transactions grouped by month for UI
-  Map<String, List<Transaction>> getTransactionsGroupedByMonth() {
+  // Search functionality
+  void updateSearchQuery(String query) {
+    _searchQuery = query;
+    _applyFilters();
+    notifyListeners();
+  }
+
+  // Filter functionality
+  void updateFilter(String? filter) {
+    _selectedFilter = filter;
+    _applyFilters();
+    notifyListeners();
+  }
+
+  // Clear search and filters
+  void clearSearchAndFilters() {
+    _searchQuery = '';
+    _selectedFilter = null;
+    _applyFilters();
+    notifyListeners();
+  }
+
+  // Balance calculations always use ALL transactions
+  double get totalIncome {
+    return _transactions
+        .where((transaction) => transaction.isIncome)
+        .fold(0.0, (sum, transaction) => sum + transaction.amount);
+  }
+
+  double get totalExpense {
+    return _transactions
+        .where((transaction) => !transaction.isIncome)
+        .fold(0.0, (sum, transaction) => sum + transaction.amount.abs());
+  }
+
+  double get netIncome => totalIncome - totalExpense;
+
+  // Apply search and filters to transactions
+  void _applyFilters() {
+    _filteredTransactions =
+        _transactions.where((transaction) {
+          // Apply search filter
+          bool matchesSearch = true;
+          if (_searchQuery.isNotEmpty) {
+            final query = _searchQuery.toLowerCase();
+            matchesSearch =
+                transaction.title.toLowerCase().contains(query) ||
+                transaction.category.toLowerCase().contains(query) ||
+                transaction.description.toLowerCase().contains(query);
+          }
+
+          // Apply type filter
+          bool matchesFilter = true;
+          if (_selectedFilter != null) {
+            switch (_selectedFilter) {
+              case 'income':
+                matchesFilter = transaction.isIncome;
+                break;
+              case 'expense':
+                matchesFilter = !transaction.isIncome;
+                break;
+              case 'this_month':
+                final now = DateTime.now();
+                matchesFilter =
+                    transaction.date.year == now.year &&
+                    transaction.date.month == now.month;
+                break;
+              // Add more filters as needed
+            }
+          }
+
+          return matchesSearch && matchesFilter;
+        }).toList();
+
+    // Sort filtered transactions by date (newest first)
+    _filteredTransactions.sort((a, b) => b.date.compareTo(a.date));
+  }
+
+  // Get filtered transactions grouped by month for UI
+  Map<String, List<Transaction>> getFilteredTransactionsGroupedByMonth() {
     final Map<String, List<Transaction>> grouped = {};
 
-    for (final transaction in _transactions) {
+    for (final transaction in _filteredTransactions) {
       final monthKey = DateFormat(
         'MMMM yyyy',
         'id_ID',
@@ -167,9 +254,7 @@ class TransactionProvider with ChangeNotifier {
       'quantity': transaction.quantity,
       'pricePerItem': transaction.pricePerItem,
       'date': DateFormat('d MMMM yyyy', 'id_ID').format(transaction.date),
-      'time': DateFormat(
-        'HH:mm',
-      ).format(transaction.date), // Use actual transaction time
+      'time': DateFormat('HH:mm').format(transaction.date),
       'icon': transaction.isIncome ? Icons.trending_up : Icons.trending_down,
     };
   }

@@ -52,83 +52,36 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage> {
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             children: [
-              // Header Section with Overlapping Balance Card
               _buildHeaderWithBalanceCard(screenWidth),
+
+              const SizedBox(height: 24),
 
               // Search Bar
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: CustomSearchField(
-                  controller: _searchController,
-                  hintText: 'Cari transaksi...',
-                  onChanged: (value) {
-                    setState(() {
-                      // Filter transactions based on search value
-                    });
+                child: Consumer<TransactionProvider>(
+                  builder: (context, provider, child) {
+                    return CustomSearchField(
+                      controller: _searchController,
+                      hintText: 'Cari transaksi...',
+                      onChanged: (value) {
+                        provider.updateSearchQuery(value);
+                      },
+                    );
                   },
                 ),
               ),
 
               const SizedBox(height: 20),
 
-              // Transaction History Header
               TransactionHistoryHeader(
                 onDownloadPressed: _handleDownloadPressed,
               ),
 
-              // Transactions grouped by month
               _buildTransactionsByMonth(),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildHeaderWithBalanceCard(double screenWidth) {
-    return SizedBox(
-      height: 320,
-      child: Stack(
-        children: [
-          // Dashboard Header without greeting
-          FinancialHeader(screenWidth: screenWidth, showGreeting: false),
-
-          // Overlapping Balance Card - positioned higher
-          Positioned(
-            left: 24,
-            top: 100,
-            right: 24,
-            child: Consumer<TransactionProvider>(
-              builder: (context, provider, child) {
-                // Calculate totals from real data
-                double totalIncome = 0.0;
-                double totalExpense = 0.0;
-
-                for (final transaction in provider.transactions) {
-                  if (transaction.isIncome) {
-                    totalIncome += transaction.amount;
-                  } else {
-                    totalExpense += transaction.amount.abs();
-                  }
-                }
-
-                final balance = totalIncome - totalExpense;
-
-                return BalanceCard(
-                  balance: balance,
-                  income: totalIncome,
-                  expense: totalExpense,
-                  isVisible: _isBalanceVisible,
-                  onToggleVisibility: () {
-                    setState(() {
-                      _isBalanceVisible = !_isBalanceVisible;
-                    });
-                  },
-                );
-              },
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -145,7 +98,9 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage> {
           );
         }
 
-        final groupedTransactions = provider.getTransactionsGroupedByMonth();
+        // Use filtered transactions for display
+        final groupedTransactions =
+            provider.getFilteredTransactionsGroupedByMonth();
 
         if (groupedTransactions.isEmpty) {
           return const Center(
@@ -188,9 +143,9 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage> {
                           for (int i = 0; i < transactions.length; i++) ...[
                             UnifiedTransactionItem(
                               title: transactions[i].title,
-                              time: DateFormat('HH:mm').format(
-                                transactions[i].date,
-                              ), // Format to show only time
+                              time: DateFormat(
+                                'HH:mm',
+                              ).format(transactions[i].date),
                               date:
                                   '${transactions[i].date.day} ${_getMonthName(transactions[i].date.month)} ${transactions[i].date.year}',
                               amount: transactions[i].amount,
@@ -388,5 +343,38 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage> {
 
   Future<void> _refreshData() async {
     await context.read<TransactionProvider>().refreshTransactions();
+  }
+
+  Widget _buildHeaderWithBalanceCard(double screenWidth) {
+    return SizedBox(
+      height: 320,
+      child: Stack(
+        children: [
+          FinancialHeader(screenWidth: screenWidth, showGreeting: false),
+
+          Positioned(
+            left: 24,
+            top: 100,
+            right: 24,
+            child: Consumer<TransactionProvider>(
+              builder: (context, provider, child) {
+                // Always use ALL transactions for balance calculation
+                return BalanceCard(
+                  balance: provider.netIncome,
+                  income: provider.totalIncome,
+                  expense: provider.totalExpense,
+                  isVisible: _isBalanceVisible,
+                  onToggleVisibility: () {
+                    setState(() {
+                      _isBalanceVisible = !_isBalanceVisible;
+                    });
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

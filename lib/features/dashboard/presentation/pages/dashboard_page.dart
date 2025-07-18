@@ -157,15 +157,20 @@ class _DashboardViewState extends State<DashboardView> {
             left: 24,
             top: 139,
             right: 24,
-            child: BalanceCard(
-              balance: provider.netIncome,
-              income: provider.totalIncome,
-              expense: provider.totalExpense,
-              isVisible: _isBalanceVisible,
-              onToggleVisibility: () {
-                setState(() {
-                  _isBalanceVisible = !_isBalanceVisible;
-                });
+            child: Consumer<TransactionProvider>(
+              builder: (context, transactionProvider, child) {
+                // Always use ALL transactions for balance calculation
+                return BalanceCard(
+                  balance: provider.netIncome,
+                  income: provider.totalIncome,
+                  expense: provider.totalExpense,
+                  isVisible: _isBalanceVisible,
+                  onToggleVisibility: () {
+                    setState(() {
+                      _isBalanceVisible = !_isBalanceVisible;
+                    });
+                  },
+                );
               },
             ),
           ),
