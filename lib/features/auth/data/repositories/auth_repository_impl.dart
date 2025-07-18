@@ -58,6 +58,12 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<User?> getCurrentUser() async {
     try {
+      // Check if token is still valid
+      if (!authService.isTokenValid()) {
+        await authService.logout();
+        return null;
+      }
+
       final userData = await authService.getUserData();
       if (userData != null && userData.isNotEmpty) {
         final userJson = json.decode(userData) as Map<String, dynamic>;

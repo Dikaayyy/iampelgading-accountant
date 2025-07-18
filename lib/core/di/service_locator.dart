@@ -21,6 +21,7 @@ import 'package:iampelgading/features/transaction/presentation/providers/transac
 
 // Core
 import 'package:iampelgading/core/services/auth_service.dart';
+import 'package:iampelgading/core/interceptors/auth_interceptor.dart';
 
 final sl = GetIt.instance;
 
@@ -32,6 +33,9 @@ Future<void> init() async {
 
   // Core services
   sl.registerLazySingleton<AuthService>(() => AuthService(sl()));
+
+  // Initialize auth interceptor
+  AuthInterceptor.init(sl<AuthService>());
 
   // Auth feature
   sl.registerLazySingleton<AuthRemoteDataSource>(

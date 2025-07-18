@@ -7,6 +7,8 @@ import 'package:iampelgading/features/financial_records/presentation/pages/finan
 import 'package:iampelgading/features/profile/presentation/pages/profile_page.dart';
 import 'package:iampelgading/features/transaction/presentation/providers/transaction_provider.dart';
 import 'package:iampelgading/core/di/service_locator.dart' as di;
+import 'package:iampelgading/core/interceptors/auth_interceptor.dart';
+import 'dart:async';
 
 class AppNavigation extends StatefulWidget {
   const AppNavigation({super.key});
@@ -18,12 +20,30 @@ class AppNavigation extends StatefulWidget {
 class _AppNavigationState extends State<AppNavigation> {
   DateTime? _lastPressedAt;
   late final TransactionProvider _transactionProvider;
+  Timer? _tokenCheckTimer;
 
   @override
   void initState() {
     super.initState();
     // Get the singleton instance
     _transactionProvider = di.sl<TransactionProvider>();
+
+    // Start periodic token validation
+    _startTokenCheck();
+  }
+
+  @override
+  void dispose() {
+    _tokenCheckTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startTokenCheck() {
+    // Check token every 5 minutes
+    _tokenCheckTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
+      AuthInterceptor.checkTokenValidity();
+      AuthInterceptor.checkTokenExpirationWarning();
+    });
   }
 
   @override
@@ -66,7 +86,6 @@ class _AppNavigationState extends State<AppNavigation> {
         ),
       );
     } else {
-      // Exit the app
       SystemNavigator.pop();
     }
   }
@@ -80,21 +99,8 @@ class _PlaceholderPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.construction, size: 64, color: Colors.grey[400]),
-            const SizedBox(height: 16),
-            Text(
-              '$title Page',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Text('Coming Soon', style: Theme.of(context).textTheme.bodyMedium),
-          ],
-        ),
-      ),
+      appBar: AppBar(title: Text(title)),
+      body: Center(child: Text(title)),
     );
   }
 }
