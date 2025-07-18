@@ -55,7 +55,7 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
   void _onNavigationChanged() {
     final currentIndex = NavigationService().controller.index;
     final isFinancialRecordsPage =
-        currentIndex == 1; // Financial records is at index 1
+        currentIndex == 2; // Financial records is now at index 2
 
     if (_isCurrentPage != isFinancialRecordsPage) {
       setState(() {

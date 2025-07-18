@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:iampelgading/core/theme/app_text_styles.dart';
 import 'package:iampelgading/features/dashboard/presentation/widgets/dashboard_header_background.dart';
+import 'package:iampelgading/features/profile/presentation/pages/profile_page.dart';
 
 class DashboardHeader extends StatelessWidget {
   final String? userName;
@@ -55,7 +57,6 @@ class DashboardHeader extends StatelessWidget {
         Positioned(
           left: 24,
           top: 68,
-          right: 24,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -76,6 +77,43 @@ class DashboardHeader extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+
+        // Profile Button (Top Right)
+        Positioned(
+          right: 24,
+          top: 68,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                PersistentNavBarNavigator.pushNewScreen(
+                  context,
+                  screen: const ProfilePage(),
+                  withNavBar: false,
+                  pageTransitionAnimation: PageTransitionAnimation.cupertino,
+                );
+              },
+              borderRadius: BorderRadius.circular(25),
+              child: Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: const Icon(
+                  Icons.settings_outlined,
+                  color: Colors.white,
+                  size: 24,
+                ),
+              ),
+            ),
           ),
         ),
       ],

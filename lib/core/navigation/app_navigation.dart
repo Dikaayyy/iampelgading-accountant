@@ -61,10 +61,8 @@ class _AppNavigationState extends State<AppNavigation> {
         child: CustomBottomNavbar(
           screens: [
             const DashboardPage(),
-            const FinancialRecordsPage(),
             const _PlaceholderPage(title: 'Add Transaction'),
-            const _PlaceholderPage(title: 'Wallet'),
-            const ProfilePage(),
+            const FinancialRecordsPage(),
           ],
         ),
       ),

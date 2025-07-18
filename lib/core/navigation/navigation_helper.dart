@@ -9,10 +9,8 @@ import 'package:iampelgading/features/transaction/presentation/providers/transac
 
 class NavigationHelper {
   static const int homeIndex = 0;
-  static const int dashboardIndex = 1;
-  static const int addTransactionIndex = 2;
-  static const int walletIndex = 3;
-  static const int profileIndex = 4;
+  static const int addTransactionIndex = 1;
+  static const int dashboardIndex = 2;
 
   static void navigateToHome() {
     NavigationService().navigateToTab(homeIndex);
@@ -24,14 +22,6 @@ class NavigationHelper {
 
   static void navigateToAddTransaction() {
     NavigationService().navigateToTab(addTransactionIndex);
-  }
-
-  static void navigateToWallet() {
-    NavigationService().navigateToTab(walletIndex);
-  }
-
-  static void navigateToProfile() {
-    NavigationService().navigateToTab(profileIndex);
   }
 
   // New method for showing floating menu

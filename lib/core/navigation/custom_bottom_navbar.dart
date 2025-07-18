@@ -59,7 +59,11 @@ class _CustomBottomNavbarState extends State<CustomBottomNavbar> {
           resizeToAvoidBottomInset: true,
           stateManagement: true,
           hideNavigationBarWhenKeyboardAppears: false,
-          padding: const EdgeInsets.only(top: 8),
+          padding: const EdgeInsets.only(
+            top: 8,
+            left: 60,
+            right: 60,
+          ), // Added horizontal padding
           backgroundColor: AppColors.white,
           isVisible: true,
           animationSettings: const NavBarAnimationSettings(
@@ -257,46 +261,40 @@ class _CustomBottomNavbarState extends State<CustomBottomNavbar> {
     return [
       // Home
       PersistentBottomNavBarItem(
-        icon: SvgPicture.asset(
-          AppAssets.home,
-          width: 26,
-          height: 26,
-          colorFilter: ColorFilter.mode(AppColors.base, BlendMode.srcIn),
+        icon: Container(
+          margin: const EdgeInsets.only(
+            left: 30,
+          ), // Add margin to move closer to center
+          child: Center(
+            child: SvgPicture.asset(
+              AppAssets.home,
+              width: 32,
+              height: 32,
+              colorFilter: ColorFilter.mode(AppColors.base, BlendMode.srcIn),
+              fit: BoxFit.contain,
+            ),
+          ),
         ),
-        inactiveIcon: SvgPicture.asset(
-          AppAssets.home,
-          width: 26,
-          height: 26,
-          colorFilter: ColorFilter.mode(
-            AppColors.neutral[100]!,
-            BlendMode.srcIn,
+        inactiveIcon: Container(
+          margin: const EdgeInsets.only(
+            left: 30,
+          ), // Add margin to move closer to center
+          child: Center(
+            child: SvgPicture.asset(
+              AppAssets.home,
+              width: 32,
+              height: 32,
+              colorFilter: ColorFilter.mode(
+                AppColors.neutral[100]!,
+                BlendMode.srcIn,
+              ),
+              fit: BoxFit.contain,
+            ),
           ),
         ),
         activeColorPrimary: AppColors.base,
         inactiveColorPrimary: AppColors.neutral[100],
-        iconSize: 26,
-      ),
-
-      // Dashboard (Graph)
-      PersistentBottomNavBarItem(
-        icon: SvgPicture.asset(
-          AppAssets.graph,
-          width: 26,
-          height: 26,
-          colorFilter: ColorFilter.mode(AppColors.base, BlendMode.srcIn),
-        ),
-        inactiveIcon: SvgPicture.asset(
-          AppAssets.graph,
-          width: 26,
-          height: 26,
-          colorFilter: ColorFilter.mode(
-            AppColors.neutral[100]!,
-            BlendMode.srcIn,
-          ),
-        ),
-        activeColorPrimary: AppColors.base,
-        inactiveColorPrimary: AppColors.neutral[100],
-        iconSize: 26,
+        iconSize: 32,
       ),
 
       // Add Transaction (Center button)
@@ -315,10 +313,12 @@ class _CustomBottomNavbarState extends State<CustomBottomNavbar> {
               ),
             ],
           ),
-          child: Icon(
-            _isFloatingMenuVisible ? Icons.close : Icons.add,
-            color: Colors.white,
-            size: 28,
+          child: Center(
+            child: Icon(
+              _isFloatingMenuVisible ? Icons.close : Icons.add,
+              color: Colors.white,
+              size: 28,
+            ),
           ),
         ),
         activeColorPrimary: AppColors.base,
@@ -326,48 +326,42 @@ class _CustomBottomNavbarState extends State<CustomBottomNavbar> {
         iconSize: 50,
       ),
 
-      // Wallet
+      // Dashboard (Graph)
       PersistentBottomNavBarItem(
-        icon: SvgPicture.asset(
-          AppAssets.wallet,
-          width: 26,
-          height: 26,
-          colorFilter: ColorFilter.mode(AppColors.base, BlendMode.srcIn),
+        icon: Container(
+          margin: const EdgeInsets.only(
+            right: 32,
+          ), // Add margin to move closer to center
+          child: Center(
+            child: SvgPicture.asset(
+              AppAssets.graph,
+              width: 32,
+              height: 32,
+              colorFilter: ColorFilter.mode(AppColors.base, BlendMode.srcIn),
+              fit: BoxFit.contain,
+            ),
+          ),
         ),
-        inactiveIcon: SvgPicture.asset(
-          AppAssets.wallet,
-          width: 26,
-          height: 26,
-          colorFilter: ColorFilter.mode(
-            AppColors.neutral[100]!,
-            BlendMode.srcIn,
+        inactiveIcon: Container(
+          margin: const EdgeInsets.only(
+            right: 32,
+          ), // Add margin to move closer to center
+          child: Center(
+            child: SvgPicture.asset(
+              AppAssets.graph,
+              width: 32,
+              height: 32,
+              colorFilter: ColorFilter.mode(
+                AppColors.neutral[100]!,
+                BlendMode.srcIn,
+              ),
+              fit: BoxFit.contain,
+            ),
           ),
         ),
         activeColorPrimary: AppColors.base,
         inactiveColorPrimary: AppColors.neutral[100],
-        iconSize: 26,
-      ),
-
-      // Profile
-      PersistentBottomNavBarItem(
-        icon: SvgPicture.asset(
-          AppAssets.person,
-          width: 26,
-          height: 26,
-          colorFilter: ColorFilter.mode(AppColors.base, BlendMode.srcIn),
-        ),
-        inactiveIcon: SvgPicture.asset(
-          AppAssets.person,
-          width: 26,
-          height: 26,
-          colorFilter: ColorFilter.mode(
-            AppColors.neutral[100]!,
-            BlendMode.srcIn,
-          ),
-        ),
-        activeColorPrimary: AppColors.base,
-        inactiveColorPrimary: AppColors.neutral[100],
-        iconSize: 26,
+        iconSize: 32,
       ),
     ];
   }
