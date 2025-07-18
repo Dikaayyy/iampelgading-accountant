@@ -62,9 +62,7 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
                   controller: _searchController,
                   hintText: 'Cari transaksi...',
                   onChanged: (value) {
-                    setState(() {
-                      // Filter transactions based on search value
-                    });
+                    provider.updateSearchQuery(value);
                   },
                 ),
               ),
@@ -100,20 +98,41 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
       return const Center(child: CircularProgressIndicator());
     }
 
+    // Use filtered transactions instead of all transactions
     final expenseTransactions =
-        provider.transactions
+        provider.filteredTransactions
             .where((transaction) => !transaction.isIncome)
             .map((transaction) => provider.transactionToMap(transaction))
             .toList();
 
     if (expenseTransactions.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('Belum ada pengeluaran'),
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              provider.searchQuery.isNotEmpty
+                  ? 'Tidak ada pengeluaran yang ditemukan'
+                  : 'Belum ada pengeluaran',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            if (provider.searchQuery.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Coba kata kunci lain',
+                style: TextStyle(color: Colors.grey[500], fontSize: 14),
+              ),
+            ],
           ],
         ),
       );
@@ -130,20 +149,41 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
       return const Center(child: CircularProgressIndicator());
     }
 
+    // Use filtered transactions instead of all transactions
     final incomeTransactions =
-        provider.transactions
+        provider.filteredTransactions
             .where((transaction) => transaction.isIncome)
             .map((transaction) => provider.transactionToMap(transaction))
             .toList();
 
     if (incomeTransactions.isEmpty) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.receipt_long_outlined, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('Belum ada pemasukan'),
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              provider.searchQuery.isNotEmpty
+                  ? 'Tidak ada pemasukan yang ditemukan'
+                  : 'Belum ada pemasukan',
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            if (provider.searchQuery.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Coba kata kunci lain',
+                style: TextStyle(color: Colors.grey[500], fontSize: 14),
+              ),
+            ],
           ],
         ),
       );
