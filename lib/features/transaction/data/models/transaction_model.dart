@@ -41,7 +41,6 @@ class TransactionModel extends Transaction {
   static DateTime _parseDateTime(String dateString, String timeString) {
     try {
       // Debug logging
-      print('Parsing date: "$dateString", time: "$timeString"');
 
       // Parse date from format "18-07-2025" or "2025-07-18"
       final dateParts = dateString.split('-');
@@ -75,7 +74,6 @@ class TransactionModel extends Transaction {
                 timeDate.minute,
                 timeDate.second,
               );
-              print('Combined date and time from full format: $result');
               return result;
             }
             // If timeString is just time "HH:MM:SS" or "HH:MM"
@@ -90,23 +88,17 @@ class TransactionModel extends Transaction {
                         : 0;
 
                 final result = DateTime(year, month, day, hour, minute, second);
-                print('Combined date and time from time format: $result');
                 return result;
               }
             }
-          } catch (e) {
-            print('Failed to parse time component: $e');
-          }
+          } catch (e) {}
         }
 
         // If no valid time provided, use midnight (00:00:00) instead of current time
         final result = DateTime(year, month, day, 0, 0, 0);
-        print('Using midnight as default: $result');
         return result;
       }
-    } catch (e) {
-      print('DateTime parsing error: $e');
-    }
+    } catch (e) {}
 
     // Fallback to current datetime only if everything fails
     return DateTime.now();

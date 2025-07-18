@@ -5,7 +5,6 @@ import 'package:iampelgading/core/widgets/custom_search_field.dart';
 import 'package:iampelgading/core/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:iampelgading/features/transaction/presentation/providers/transaction_provider.dart';
-import 'package:intl/intl.dart';
 
 class FinancialRecordsPage extends StatefulWidget {
   const FinancialRecordsPage({super.key});

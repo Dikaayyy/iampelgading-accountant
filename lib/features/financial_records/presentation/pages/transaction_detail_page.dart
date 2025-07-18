@@ -148,7 +148,7 @@ class TransactionDetailPage extends StatelessWidget {
   }
 
   Widget _buildDetailRow(String label, String value) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

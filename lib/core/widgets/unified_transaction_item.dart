@@ -131,7 +131,7 @@ class UnifiedTransactionItem extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Container(
+                      SizedBox(
                         width: 20,
                         height: 20,
                         child: Icon(

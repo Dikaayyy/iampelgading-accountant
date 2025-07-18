@@ -31,14 +31,9 @@ class ProfileProvider with ChangeNotifier {
 
   void onChangePassword() {
     // Navigation will be handled in the UI
-    print('Change password tapped');
   }
 
-  void onChangeUsername() {
-    print('Change username tapped');
-  }
+  void onChangeUsername() {}
 
-  void onAppInfo() {
-    print('App info tapped');
-  }
+  void onAppInfo() {}
 }

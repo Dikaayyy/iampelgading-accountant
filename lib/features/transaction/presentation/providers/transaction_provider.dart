@@ -101,7 +101,7 @@ class TransactionProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      _transactions = await _getTransactions!.call();
+      _transactions = await _getTransactions.call();
       _applyFilters(); // Apply current filters to new data
       _isLoadingTransactions = false;
       notifyListeners();
@@ -259,20 +259,6 @@ class TransactionProvider with ChangeNotifier {
     };
   }
 
-  // Add this helper method
-  String _formatTimeOnly(DateTime dateTime) {
-    return DateFormat('HH:mm').format(dateTime);
-  }
-
-  // Add this helper method
-  String _formatNumber(double number) {
-    if (number == number.roundToDouble()) {
-      return number.toInt().toString();
-    } else {
-      return number.toString();
-    }
-  }
-
   void _initializeDefaultValues() {
     try {
       _selectedDate = DateTime.now();
@@ -404,12 +390,9 @@ class TransactionProvider with ChangeNotifier {
         );
 
         // Debug: Print what we're sending
-        print('Sending transaction with date: ${combinedDateTime.toString()}');
-        print('Selected date: $_selectedDate');
-        print('Selected time: $_selectedTime');
 
         // Call API to create transaction
-        final createdTransaction = await _addTransaction!.call(transaction);
+        final createdTransaction = await _addTransaction.call(transaction);
 
         // Add the created transaction to local list
         _transactions.add(createdTransaction);
@@ -475,10 +458,9 @@ class TransactionProvider with ChangeNotifier {
         );
 
         // Debug: Print what we're sending
-        print('Updating transaction with date: ${combinedDateTime.toString()}');
 
         // Call API to update transaction
-        final updatedTransaction = await _updateTransaction!.call(transaction);
+        final updatedTransaction = await _updateTransaction.call(transaction);
 
         // Update local list
         final index = _transactions.indexWhere((t) => t.id == transactionId);
@@ -518,7 +500,7 @@ class TransactionProvider with ChangeNotifier {
 
     try {
       // Call API to delete transaction
-      await _deleteTransaction!.call(transactionId);
+      await _deleteTransaction.call(transactionId);
 
       // Remove transaction from local list
       _transactions.removeWhere(
@@ -647,7 +629,6 @@ class TransactionProvider with ChangeNotifier {
     // Parse and set time from the transaction time string - USE DATABASE TIME
     try {
       final timeStr = transaction['time'] as String? ?? '';
-      print('Parsing time from transaction: "$timeStr"');
 
       if (timeStr.isNotEmpty && timeStr != '00:00' && timeStr != 'null') {
         // Parse time in format "HH:mm" or "HH:mm:ss"
@@ -660,24 +641,17 @@ class TransactionProvider with ChangeNotifier {
           _selectedTime = TimeOfDay(hour: hour, minute: minute);
           timeController.text =
               '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
-
-          print(
-            'Set time from database: ${_selectedTime.hour}:${_selectedTime.minute}',
-          );
         } else {
           // If time format is invalid, use 00:00
           _selectedTime = const TimeOfDay(hour: 0, minute: 0);
           timeController.text = '00:00';
-          print('Invalid time format, using 00:00');
         }
       } else {
         // If time is empty or null, use 00:00
         _selectedTime = const TimeOfDay(hour: 0, minute: 0);
         timeController.text = '00:00';
-        print('Empty time, using 00:00');
       }
     } catch (e) {
-      print('Error parsing time: $e');
       _selectedTime = const TimeOfDay(hour: 0, minute: 0);
       timeController.text = '00:00';
     }

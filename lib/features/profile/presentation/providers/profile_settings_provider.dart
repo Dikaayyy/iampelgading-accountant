@@ -42,7 +42,6 @@ class ProfileSettingsProvider with ChangeNotifier {
       }
     } catch (e) {
       // Handle error
-      print('Error picking image: $e');
     }
   }
 
@@ -62,7 +61,6 @@ class ProfileSettingsProvider with ChangeNotifier {
       }
     } catch (e) {
       // Handle error
-      print('Error taking photo: $e');
     }
   }
 

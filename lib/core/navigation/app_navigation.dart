@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:iampelgading/core/navigation/custom_bottom_navbar.dart';
 import 'package:iampelgading/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:iampelgading/features/financial_records/presentation/pages/financial_records_page.dart';
-import 'package:iampelgading/features/profile/presentation/pages/profile_page.dart';
 import 'package:iampelgading/features/transaction/presentation/providers/transaction_provider.dart';
 import 'package:iampelgading/core/di/service_locator.dart' as di;
 import 'package:iampelgading/core/interceptors/auth_interceptor.dart';
