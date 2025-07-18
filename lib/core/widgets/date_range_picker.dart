@@ -86,6 +86,7 @@ class _DateRangePickerState extends State<DateRangePicker> {
           hintText: 'Pilih tanggal mulai',
           controller: _startDateController,
           readOnly: true,
+          backgroundColor: Colors.white, // Tambahkan ini
           suffixIcon: const Icon(
             Icons.calendar_month_rounded,
             color: AppColors.base,
@@ -101,6 +102,7 @@ class _DateRangePickerState extends State<DateRangePicker> {
           hintText: 'Pilih tanggal akhir',
           controller: _endDateController,
           readOnly: true,
+          backgroundColor: Colors.white, // Tambahkan ini
           suffixIcon: const Icon(
             Icons.calendar_month_rounded,
             color: AppColors.base,

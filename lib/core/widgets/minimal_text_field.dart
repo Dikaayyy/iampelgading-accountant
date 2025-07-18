@@ -19,6 +19,7 @@ class MinimalTextField extends StatelessWidget {
   final bool autofocus;
   final bool enabled;
   final double? width;
+  final Color? backgroundColor; // Parameter baru
 
   const MinimalTextField({
     super.key,
@@ -39,6 +40,7 @@ class MinimalTextField extends StatelessWidget {
     this.autofocus = false,
     this.enabled = true,
     this.width = 364,
+    this.backgroundColor, // Parameter baru
   });
 
   @override
@@ -114,7 +116,10 @@ class MinimalTextField extends StatelessWidget {
                             ),
                             suffixIcon: suffixIcon,
                             filled: true,
-                            fillColor: AppColors.background[200],
+                            fillColor:
+                                backgroundColor ??
+                                AppColors
+                                    .background[200], // Gunakan parameter baru
                           ),
                         ),
                       ),

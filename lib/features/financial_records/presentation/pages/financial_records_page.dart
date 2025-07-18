@@ -501,13 +501,6 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
                   Row(
                     children: [
                       Expanded(
-                        child: SecondaryButton(
-                          text: 'Batal',
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
                         child: Consumer<TransactionProvider>(
                           builder: (context, provider, child) {
                             return PrimaryButton(
