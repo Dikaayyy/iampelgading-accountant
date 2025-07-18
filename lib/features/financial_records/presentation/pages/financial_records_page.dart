@@ -14,6 +14,10 @@ import 'package:provider/provider.dart';
 import 'package:iampelgading/features/transaction/presentation/providers/transaction_provider.dart';
 import 'package:intl/intl.dart';
 import 'package:iampelgading/core/navigation/navigation_service.dart';
+import 'package:iampelgading/core/widgets/date_range_picker.dart';
+import 'package:iampelgading/core/widgets/custom_button.dart';
+import 'package:iampelgading/core/widgets/permission_dialog.dart';
+import 'package:iampelgading/core/services/permission_service.dart';
 
 class FinancialRecordsPage extends StatefulWidget {
   const FinancialRecordsPage({super.key});
@@ -28,6 +32,10 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
   final FocusNode _searchFocusNode = FocusNode();
   bool _isBalanceVisible = true;
   bool _isCurrentPage = true;
+
+  // Add these fields
+  DateTime? _exportStartDate;
+  DateTime? _exportEndDate;
 
   @override
   bool get wantKeepAlive => true;
@@ -340,54 +348,271 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
   }
 
   void _handleDownloadPressed() {
-    CustomBottomSheet.show(
+    showModalBottomSheet(
       context: context,
-      title: 'Ekspor Data Transaksi',
-      items: [
-        BottomSheetItem(
-          title: 'Ekspor ke PDF',
-          subtitle: 'Unduh data transaksi dalam format PDF',
-          icon: Icons.picture_as_pdf,
-          iconColor: const Color(0xFFFF4545),
-          iconBackgroundColor: const Color(0xFFFF4545).withOpacity(0.1),
-          onTap: () {
-            Navigator.of(context).pop();
-            _exportToPdf();
-          },
-        ),
-        BottomSheetItem(
-          title: 'Ekspor ke CSV',
-          subtitle: 'Unduh data transaksi dalam format CSV',
-          icon: Icons.table_chart_outlined,
-          iconColor: const Color(0xFF40B029),
-          iconBackgroundColor: const Color(0xFF40B029).withOpacity(0.1),
-          onTap: () {
-            Navigator.of(context).pop();
-            _exportToCsv();
-          },
-        ),
-      ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      useRootNavigator: true,
+      builder:
+          (context) => CustomBottomSheet(
+            title: 'Ekspor Data Transaksi',
+            items: [
+              BottomSheetItem(
+                title: 'Ekspor ke CSV',
+                subtitle: 'Unduh data transaksi dalam format CSV',
+                icon: Icons.table_chart_outlined,
+                iconColor: const Color(0xFF40B029),
+                iconBackgroundColor: const Color(0xFF40B029).withOpacity(0.1),
+                onTap: () {
+                  // Tutup CustomBottomSheet sebelum buka date range
+                  Navigator.of(context).pop();
+                  Future.delayed(const Duration(milliseconds: 200), () {
+                    _checkPermissionAndShowDateRange();
+                  });
+                },
+              ),
+            ],
+            onClose: () => Navigator.of(context).pop(),
+          ),
     );
   }
 
-  void _exportToPdf() {
-    // TODO: Implement PDF export
-    SnackbarHelper.showSuccess(
+  Future<void> _checkPermissionAndShowDateRange() async {
+    try {
+      final hasPermission = await PermissionService.checkStoragePermission();
+
+      if (hasPermission) {
+        _showDateRangeBottomSheet();
+      } else {
+        if (mounted) {
+          await PermissionDialog.showStoragePermissionDialog(
+            context,
+            onGranted: () {
+              if (mounted) {
+                _showDateRangeBottomSheet();
+              }
+            },
+            onDenied: () {
+              if (mounted) {
+                SnackbarHelper.showWarning(
+                  context: context,
+                  title: 'Izin Diperlukan',
+                  message:
+                      'Izin akses storage diperlukan untuk mengekspor file CSV',
+                  showAtTop: true,
+                );
+              }
+            },
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        SnackbarHelper.showError(
+          context: context,
+          title: 'Error',
+          message: 'Terjadi kesalahan saat memeriksa izin',
+          showAtTop: true,
+        );
+      }
+    }
+  }
+
+  void _showDateRangeBottomSheet() {
+    showModalBottomSheet(
       context: context,
-      title: 'Ekspor Berhasil',
-      message: 'Data transaksi berhasil diekspor ke PDF',
-      showAtTop: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      useRootNavigator: true,
+      builder: (context) => _buildDateRangeBottomSheet(),
     );
   }
 
-  void _exportToCsv() {
-    // TODO: Implement CSV export
-    SnackbarHelper.showSuccess(
-      context: context,
-      title: 'Ekspor Berhasil',
-      message: 'Data transaksi berhasil diekspor ke CSV',
-      showAtTop: true,
+  Widget _buildDateRangeBottomSheet() {
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.7,
+      ),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(top: 16),
+            decoration: BoxDecoration(
+              color: AppColors.neutral[50],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+
+          // Header
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Text(
+              'Pilih Periode Transaksi',
+              style: AppTextStyles.h3.copyWith(
+                color: const Color(0xFF202D41),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+
+          // Divider
+          Container(height: 1, color: AppColors.neutral[50]?.withOpacity(0.3)),
+
+          // Content
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  // Date Range Picker - Use callback properly
+                  DateRangePicker(
+                    initialStartDate:
+                        _exportStartDate ??
+                        DateTime.now().subtract(const Duration(days: 30)),
+                    initialEndDate: _exportEndDate ?? DateTime.now(),
+                    onDateRangeSelected: (startDate, endDate) {
+                      // Don't call setState immediately, schedule it for next frame
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (mounted) {
+                          setState(() {
+                            _exportStartDate = startDate;
+                            _exportEndDate = endDate;
+                          });
+                        }
+                      });
+                    },
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // Buttons
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SecondaryButton(
+                          text: 'Batal',
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Consumer<TransactionProvider>(
+                          builder: (context, provider, child) {
+                            return PrimaryButton(
+                              text: 'Ekspor CSV',
+                              isLoading: provider.isExporting,
+                              onPressed:
+                                  provider.isExporting
+                                      ? null
+                                      : () => _exportToCsv(),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  void _exportToCsv() async {
+    if (_exportStartDate == null || _exportEndDate == null) {
+      SnackbarHelper.showWarning(
+        context: context,
+        title: 'Periode Tidak Valid',
+        message: 'Silakan pilih tanggal mulai dan akhir',
+        showAtTop: true,
+      );
+      return;
+    }
+
+    if (_exportStartDate!.isAfter(_exportEndDate!)) {
+      SnackbarHelper.showWarning(
+        context: context,
+        title: 'Periode Tidak Valid',
+        message: 'Tanggal mulai tidak boleh lebih dari tanggal akhir',
+        showAtTop: true,
+      );
+      return;
+    }
+
+    try {
+      // Tutup modal date range sebelum ekspor
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+
+      // Show loading
+      if (mounted) {
+        SnackbarHelper.showInfo(
+          context: context,
+          title: 'Mengekspor Data',
+          message: 'Sedang memproses data transaksi...',
+          showAtTop: true,
+        );
+      }
+
+      final filePath = await context
+          .read<TransactionProvider>()
+          .exportTransactionsToCsv(
+            startDate: _exportStartDate!,
+            endDate: _exportEndDate!,
+          );
+
+      if (mounted) {
+        final fileName = filePath.split('/').last;
+
+        SnackbarHelper.showSuccess(
+          context: context,
+          title: 'Ekspor Berhasil',
+          message:
+              'Data berhasil diekspor ke: Download/iampelgading/csv/$fileName',
+          showAtTop: true,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        String errorMessage = e.toString();
+        if (errorMessage.contains('Exception: ')) {
+          errorMessage = errorMessage.replaceFirst('Exception: ', '');
+        }
+
+        // Handle permission denied specifically
+        if (errorMessage.contains('Permission denied') ||
+            errorMessage.contains('izin akses storage')) {
+          await PermissionDialog.showPermissionDeniedDialog(
+            context,
+            onOpenSettings: () {
+              // Optional: Show success message after user returns from settings
+            },
+          );
+        } else {
+          SnackbarHelper.showError(
+            context: context,
+            title: 'Ekspor Gagal',
+            message: errorMessage,
+            showAtTop: true,
+          );
+        }
+      }
+    }
   }
 
   Future<void> _refreshData() async {

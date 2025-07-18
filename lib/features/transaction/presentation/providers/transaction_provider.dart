@@ -7,12 +7,15 @@ import 'package:iampelgading/features/transaction/domain/usecases/delete_transac
 import 'package:iampelgading/features/transaction/domain/entities/transaction.dart';
 import 'package:iampelgading/core/services/auth_service.dart';
 import 'package:iampelgading/core/di/service_locator.dart' as di;
+import 'package:iampelgading/features/transaction/domain/usecases/export_transactions_usecase.dart';
+import 'package:iampelgading/core/services/csv_export_service.dart';
 
 class TransactionProvider with ChangeNotifier {
   final AddTransaction? _addTransaction;
   final GetTransactions? _getTransactions;
   final UpdateTransaction? _updateTransaction;
   final DeleteTransaction? _deleteTransaction;
+  final ExportTransactions? _exportTransactions;
 
   // Controllers
   final TextEditingController dateController = TextEditingController();
@@ -85,6 +88,7 @@ class TransactionProvider with ChangeNotifier {
     this._getTransactions,
     this._updateTransaction,
     this._deleteTransaction,
+    this._exportTransactions,
   ]) {
     _initializeDefaultValues();
     quantityController.text = '0';
@@ -671,6 +675,55 @@ class TransactionProvider with ChangeNotifier {
 
     updateQuantityOrPrice();
     notifyListeners();
+  }
+
+  bool _isExporting = false;
+  bool get isExporting => _isExporting;
+
+  Future<String> exportTransactionsToCsv({
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    _isExporting = true;
+    notifyListeners();
+
+    try {
+      // Filter transactions by date range
+      final filteredTransactions =
+          _transactions.where((transaction) {
+            final transactionDate = DateTime(
+              transaction.date.year,
+              transaction.date.month,
+              transaction.date.day,
+            );
+            final start = DateTime(
+              startDate.year,
+              startDate.month,
+              startDate.day,
+            );
+            final end = DateTime(endDate.year, endDate.month, endDate.day);
+
+            return transactionDate.isAfter(
+                  start.subtract(const Duration(days: 1)),
+                ) &&
+                transactionDate.isBefore(end.add(const Duration(days: 1)));
+          }).toList();
+
+      if (filteredTransactions.isEmpty) {
+        throw Exception('Tidak ada transaksi dalam periode yang dipilih');
+      }
+
+      final filePath = await CsvExportService.exportTransactionsToCsv(
+        transactions: filteredTransactions,
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      return filePath;
+    } finally {
+      _isExporting = false;
+      notifyListeners();
+    }
   }
 }
 
