@@ -13,6 +13,7 @@ import 'package:iampelgading/features/transaction/presentation/pages/edit_transa
 import 'package:provider/provider.dart';
 import 'package:iampelgading/features/transaction/presentation/providers/transaction_provider.dart';
 import 'package:intl/intl.dart';
+import 'package:iampelgading/core/navigation/navigation_service.dart';
 
 class FinancialRecordsPage extends StatefulWidget {
   const FinancialRecordsPage({super.key});
@@ -21,9 +22,15 @@ class FinancialRecordsPage extends StatefulWidget {
   State<FinancialRecordsPage> createState() => _FinancialRecordsPageState();
 }
 
-class _FinancialRecordsPageState extends State<FinancialRecordsPage> {
+class _FinancialRecordsPageState extends State<FinancialRecordsPage>
+    with AutomaticKeepAliveClientMixin {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
   bool _isBalanceVisible = true;
+  bool _isCurrentPage = true;
+
+  @override
+  bool get wantKeepAlive => true;
 
   @override
   void initState() {
@@ -32,54 +39,92 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<TransactionProvider>().loadTransactions();
     });
+
+    // Listen to navigation changes
+    NavigationService().controller.addListener(_onNavigationChanged);
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
+    NavigationService().controller.removeListener(_onNavigationChanged);
     super.dispose();
+  }
+
+  void _onNavigationChanged() {
+    final currentIndex = NavigationService().controller.index;
+    final isFinancialRecordsPage =
+        currentIndex == 1; // Financial records is at index 1
+
+    if (_isCurrentPage != isFinancialRecordsPage) {
+      setState(() {
+        _isCurrentPage = isFinancialRecordsPage;
+      });
+
+      // Clear search when leaving this page
+      if (!isFinancialRecordsPage) {
+        _clearSearch();
+      }
+    }
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    _searchFocusNode.unfocus();
+    context.read<TransactionProvider>().updateSearchQuery('');
+  }
+
+  void _dismissKeyboard() {
+    _searchFocusNode.unfocus();
   }
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       backgroundColor: AppColors.background[200],
-      body: RefreshIndicator(
-        onRefresh: _refreshData,
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            children: [
-              _buildHeaderWithBalanceCard(screenWidth),
+      body: GestureDetector(
+        onTap: _dismissKeyboard,
+        behavior: HitTestBehavior.opaque,
+        child: RefreshIndicator(
+          onRefresh: _refreshData,
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                _buildHeaderWithBalanceCard(screenWidth),
 
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              // Search Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Consumer<TransactionProvider>(
-                  builder: (context, provider, child) {
-                    return CustomSearchField(
-                      controller: _searchController,
-                      hintText: 'Cari transaksi...',
-                      onChanged: (value) {
-                        provider.updateSearchQuery(value);
-                      },
-                    );
-                  },
+                // Search Bar
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Consumer<TransactionProvider>(
+                    builder: (context, provider, child) {
+                      return CustomSearchField(
+                        controller: _searchController,
+                        focusNode: _searchFocusNode,
+                        hintText: 'Cari transaksi...',
+                        onChanged: (value) {
+                          provider.updateSearchQuery(value);
+                        },
+                      );
+                    },
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              TransactionHistoryHeader(
-                onDownloadPressed: _handleDownloadPressed,
-              ),
+                TransactionHistoryHeader(
+                  onDownloadPressed: _handleDownloadPressed,
+                ),
 
-              _buildTransactionsByMonth(),
-            ],
+                _buildTransactionsByMonth(),
+              ],
+            ),
           ),
         ),
       ),
@@ -103,10 +148,14 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage> {
             provider.getFilteredTransactionsGroupedByMonth();
 
         if (groupedTransactions.isEmpty) {
-          return const Center(
+          return Center(
             child: Padding(
-              padding: EdgeInsets.all(32.0),
-              child: Text('Belum ada transaksi'),
+              padding: const EdgeInsets.all(32.0),
+              child: Text(
+                _searchController.text.isNotEmpty
+                    ? 'Tidak ada transaksi yang ditemukan'
+                    : 'Belum ada transaksi',
+              ),
             ),
           );
         }
