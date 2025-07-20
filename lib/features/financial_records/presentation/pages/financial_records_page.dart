@@ -424,11 +424,11 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       useRootNavigator: true,
-      builder: (context) => _buildDateRangeBottomSheet(),
+      builder: (sheetContext) => _buildDateRangeBottomSheet(sheetContext),
     );
   }
 
-  Widget _buildDateRangeBottomSheet() {
+  Widget _buildDateRangeBottomSheet(BuildContext sheetContext) {
     return Container(
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.7,
@@ -509,7 +509,7 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
                               onPressed:
                                   provider.isExporting
                                       ? null
-                                      : () => _exportToCsv(),
+                                      : () => _exportToCsv(sheetContext),
                             );
                           },
                         ),
@@ -525,10 +525,10 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
     );
   }
 
-  void _exportToCsv() async {
+  void _exportToCsv(BuildContext sheetContext) async {
     if (_exportStartDate == null || _exportEndDate == null) {
       SnackbarHelper.showWarning(
-        context: context,
+        context: sheetContext,
         title: 'Periode Tidak Valid',
         message: 'Silakan pilih tanggal mulai dan akhir',
         showAtTop: true,
@@ -538,7 +538,7 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
 
     if (_exportStartDate!.isAfter(_exportEndDate!)) {
       SnackbarHelper.showWarning(
-        context: context,
+        context: sheetContext,
         title: 'Periode Tidak Valid',
         message: 'Tanggal mulai tidak boleh lebih dari tanggal akhir',
         showAtTop: true,
@@ -548,8 +548,8 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
 
     try {
       // Tutup modal date range sebelum ekspor
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
+      if (Navigator.of(sheetContext).canPop()) {
+        Navigator.of(sheetContext).pop();
       }
 
       // Show loading
@@ -587,14 +587,11 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
           errorMessage = errorMessage.replaceFirst('Exception: ', '');
         }
 
-        // Handle permission denied specifically
         if (errorMessage.contains('Permission denied') ||
             errorMessage.contains('izin akses storage')) {
           await PermissionDialog.showPermissionDeniedDialog(
             context,
-            onOpenSettings: () {
-              // Optional: Show success message after user returns from settings
-            },
+            onOpenSettings: () {},
           );
         } else {
           SnackbarHelper.showError(
