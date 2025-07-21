@@ -21,6 +21,8 @@ import 'package:iampelgading/core/services/permission_service.dart';
 import 'package:open_file/open_file.dart';
 import 'dart:io';
 import 'package:iampelgading/core/services/file_opener_service.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:iampelgading/features/transaction/domain/entities/transaction.dart';
 
 class FinancialRecordsPage extends StatefulWidget {
   const FinancialRecordsPage({super.key});
@@ -36,9 +38,17 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
   bool _isBalanceVisible = true;
   bool _isCurrentPage = true;
 
+  // Pagination controller
+  final PagingController<int, Transaction> _pagingController = PagingController(
+    firstPageKey: 1,
+  );
+
   // Add these fields
   DateTime? _exportStartDate;
   DateTime? _exportEndDate;
+
+  // Static page size
+  static const int _pageSize = 10;
 
   @override
   bool get wantKeepAlive => true;
@@ -46,20 +56,32 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
   @override
   void initState() {
     super.initState();
+
+    // Setup pagination controller
+    _pagingController.addPageRequestListener((pageKey) {
+      _fetchPage(pageKey);
+    });
+
     // Load transactions when page initializes
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TransactionProvider>().loadTransactions();
+      final provider = context.read<TransactionProvider>();
+      provider.loadTransactions(); // For balance calculation
     });
 
     // Listen to navigation changes
     NavigationService().controller.addListener(_onNavigationChanged);
+
+    // Listen to search changes
+    _searchController.addListener(_onSearchChanged);
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     _searchFocusNode.dispose();
+    _pagingController.dispose();
     NavigationService().controller.removeListener(_onNavigationChanged);
+    _searchController.removeListener(_onSearchChanged);
     super.dispose();
   }
 
@@ -80,14 +102,67 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
     }
   }
 
+  void _onSearchChanged() {
+    // Debounce search to avoid too many API calls
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (_searchController.text !=
+          context.read<TransactionProvider>().searchQuery) {
+        _refreshPagination();
+      }
+    });
+  }
+
   void _clearSearch() {
     _searchController.clear();
     _searchFocusNode.unfocus();
     context.read<TransactionProvider>().updateSearchQuery('');
+    _refreshPagination();
   }
 
   void _dismissKeyboard() {
     _searchFocusNode.unfocus();
+  }
+
+  Future<void> _fetchPage(int pageKey) async {
+    try {
+      print('Fetching page: $pageKey'); // Debug log
+
+      final provider = context.read<TransactionProvider>();
+      final response = await provider.getTransactionsPaginated?.call(
+        page: pageKey,
+        limit: _pageSize,
+        search:
+            _searchController.text.isNotEmpty ? _searchController.text : null,
+      );
+
+      print(
+        'Response received for page $pageKey: hasNextPage=${response?.hasNextPage}, totalPages=${response?.totalPages}, currentPage=${response?.currentPage}, dataCount=${response?.data.length}',
+      );
+
+      if (response != null) {
+        final isLastPage = !response.hasNextPage;
+
+        print('Is last page: $isLastPage'); // Debug log
+
+        if (isLastPage) {
+          _pagingController.appendLastPage(response.data);
+        } else {
+          final nextPageKey = pageKey + 1;
+          print('Appending page with nextPageKey: $nextPageKey'); // Debug log
+          _pagingController.appendPage(response.data, nextPageKey);
+        }
+      } else {
+        print('Response is null, appending empty last page'); // Debug log
+        _pagingController.appendLastPage([]);
+      }
+    } catch (error) {
+      print('Error fetching page $pageKey: $error'); // Debug log
+      _pagingController.error = error;
+    }
+  }
+
+  void _refreshPagination() {
+    _pagingController.refresh();
   }
 
   @override
@@ -102,157 +177,278 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
         behavior: HitTestBehavior.opaque,
         child: RefreshIndicator(
           onRefresh: _refreshData,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              children: [
-                _buildHeaderWithBalanceCard(screenWidth),
+          child: CustomScrollView(
+            slivers: [
+              // Header and Balance Card
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    _buildHeaderWithBalanceCard(screenWidth),
+                    const SizedBox(height: 24),
 
-                const SizedBox(height: 24),
-
-                // Search Bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Consumer<TransactionProvider>(
-                    builder: (context, provider, child) {
-                      return CustomSearchField(
-                        controller: _searchController,
-                        focusNode: _searchFocusNode,
-                        hintText: 'Cari transaksi...',
-                        onChanged: (value) {
-                          provider.updateSearchQuery(value);
+                    // Search Bar
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Consumer<TransactionProvider>(
+                        builder: (context, provider, child) {
+                          return CustomSearchField(
+                            controller: _searchController,
+                            focusNode: _searchFocusNode,
+                            hintText: 'Cari transaksi...',
+                            onChanged: (value) {
+                              provider.updateSearchQuery(value);
+                            },
+                          );
                         },
-                      );
-                    },
-                  ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    TransactionHistoryHeader(
+                      onDownloadPressed: _handleDownloadPressed,
+                    ),
+                  ],
                 ),
+              ),
 
-                const SizedBox(height: 20),
-
-                TransactionHistoryHeader(
-                  onDownloadPressed: _handleDownloadPressed,
-                ),
-
-                _buildTransactionsByMonth(),
-              ],
-            ),
+              // Paginated Transaction List
+              _buildPaginatedTransactionList(),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildTransactionsByMonth() {
-    return Consumer<TransactionProvider>(
-      builder: (context, provider, child) {
-        if (provider.isLoadingTransactions) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(32.0),
-              child: CircularProgressIndicator(),
-            ),
-          );
+  Widget _buildPaginatedTransactionList() {
+    return PagedSliverList<int, Transaction>(
+      pagingController: _pagingController,
+      builderDelegate: PagedChildBuilderDelegate<Transaction>(
+        itemBuilder: (context, transaction, index) {
+          return _buildTransactionItem(transaction, index);
+        },
+        firstPageErrorIndicatorBuilder: (context) => _buildErrorIndicator(),
+        newPageErrorIndicatorBuilder:
+            (context) => _buildNewPageErrorIndicator(),
+        firstPageProgressIndicatorBuilder:
+            (context) => _buildLoadingIndicator(),
+        newPageProgressIndicatorBuilder:
+            (context) => _buildNewPageLoadingIndicator(),
+        noItemsFoundIndicatorBuilder: (context) => _buildEmptyIndicator(),
+        noMoreItemsIndicatorBuilder: (context) => _buildNoMoreItemsIndicator(),
+      ),
+    );
+  }
+
+  Widget _buildTransactionItem(Transaction transaction, int index) {
+    // Group by month logic
+    bool shouldShowMonthHeader = false;
+    String monthName = '';
+
+    if (index == 0) {
+      shouldShowMonthHeader = true;
+      monthName = DateFormat('MMMM yyyy', 'id_ID').format(transaction.date);
+    } else {
+      // Check if this transaction is from a different month than the previous one
+      final currentItems = _pagingController.itemList ?? [];
+      if (index > 0 && index <= currentItems.length - 1) {
+        final prevTransaction = currentItems[index - 1];
+        final currentMonth = DateFormat(
+          'MMMM yyyy',
+          'id_ID',
+        ).format(transaction.date);
+        final prevMonth = DateFormat(
+          'MMMM yyyy',
+          'id_ID',
+        ).format(prevTransaction.date);
+
+        if (currentMonth != prevMonth) {
+          shouldShowMonthHeader = true;
+          monthName = currentMonth;
         }
+      }
+    }
 
-        // Use filtered transactions for display
-        final groupedTransactions =
-            provider.getFilteredTransactionsGroupedByMonth();
-
-        if (groupedTransactions.isEmpty) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(32.0),
-              child: Text(
-                _searchController.text.isNotEmpty
-                    ? 'Tidak ada transaksi yang ditemukan'
-                    : 'Belum ada transaksi',
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Month Header
+        if (shouldShowMonthHeader)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Text(
+              monthName,
+              style: AppTextStyles.h4.copyWith(
+                color: const Color(0xFF202D41),
+                fontWeight: FontWeight.w600,
               ),
             ),
-          );
-        }
+          ),
 
-        return Column(
-          children:
-              groupedTransactions.entries.map((entry) {
-                final month = entry.key;
-                final transactions = entry.value;
-
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Month Header
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
-                      ),
-                      child: Text(
-                        month,
-                        style: AppTextStyles.h4.copyWith(
-                          color: const Color(0xFF202D41),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-
-                    // Transactions for this month
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Column(
-                        children: [
-                          for (int i = 0; i < transactions.length; i++) ...[
-                            UnifiedTransactionItem(
-                              title: transactions[i].title,
-                              time: DateFormat(
-                                'HH:mm',
-                              ).format(transactions[i].date),
-                              date:
-                                  '${transactions[i].date.day} ${_getMonthName(transactions[i].date.month)} ${transactions[i].date.year}',
-                              amount: transactions[i].amount,
-                              icon:
-                                  transactions[i].isIncome
-                                      ? Icons.arrow_downward
-                                      : Icons.arrow_upward,
-                              transactionData: provider.transactionToMap(
-                                transactions[i],
-                              ),
-                              onEdit:
-                                  () => _handleEditTransaction(
-                                    provider.transactionToMap(transactions[i]),
-                                  ),
-                              onDelete:
-                                  () => _handleDeleteTransaction(
-                                    provider.transactionToMap(transactions[i]),
-                                  ),
-                            ),
-                            if (i < transactions.length - 1)
-                              Opacity(
-                                opacity: 0.10,
-                                child: Container(
-                                  width: double.infinity,
-                                  height: 1,
-                                  margin: const EdgeInsets.symmetric(
-                                    vertical: 6,
-                                  ),
-                                  decoration: ShapeDecoration(
-                                    color: const Color(0xFF6A788D),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ],
+        // Transaction Item
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            children: [
+              UnifiedTransactionItem(
+                title: transaction.title,
+                time: DateFormat('HH:mm').format(transaction.date),
+                date:
+                    '${transaction.date.day} ${_getMonthName(transaction.date.month)} ${transaction.date.year}',
+                amount: transaction.amount,
+                icon:
+                    transaction.isIncome
+                        ? Icons.arrow_downward
+                        : Icons.arrow_upward,
+                transactionData: context
+                    .read<TransactionProvider>()
+                    .transactionToMap(transaction),
+                onEdit:
+                    () => _handleEditTransaction(
+                      context.read<TransactionProvider>().transactionToMap(
+                        transaction,
                       ),
                     ),
+                onDelete:
+                    () => _handleDeleteTransaction(
+                      context.read<TransactionProvider>().transactionToMap(
+                        transaction,
+                      ),
+                    ),
+              ),
 
-                    const SizedBox(height: 12),
-                  ],
-                );
-              }).toList(),
-        );
-      },
+              // Separator (except for last item in the list)
+              if (index < (_pagingController.itemList?.length ?? 0) - 1)
+                Opacity(
+                  opacity: 0.10,
+                  child: Container(
+                    width: double.infinity,
+                    height: 1,
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    decoration: ShapeDecoration(
+                      color: const Color(0xFF6A788D),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 12),
+      ],
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(32.0),
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+
+  Widget _buildNewPageLoadingIndicator() {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+
+  Widget _buildErrorIndicator() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            const Text(
+              'Terjadi kesalahan saat memuat data',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _refreshPagination,
+              child: const Text('Coba Lagi'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNewPageErrorIndicator() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            const Text(
+              'Gagal memuat data selanjutnya',
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: _refreshPagination,
+              child: const Text('Coba Lagi'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyIndicator() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          children: [
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 64,
+              color: Colors.grey[400],
+            ),
+            const SizedBox(height: 16),
+            Text(
+              _searchController.text.isNotEmpty
+                  ? 'Tidak ada transaksi yang ditemukan'
+                  : 'Belum ada transaksi',
+              style: TextStyle(
+                fontSize: 16,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            if (_searchController.text.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Coba kata kunci lain',
+                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNoMoreItemsIndicator() {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(16.0),
+        child: Text(
+          'Tidak ada data lagi',
+          style: TextStyle(color: Colors.grey),
+        ),
+      ),
     );
   }
 
@@ -333,6 +529,9 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
       await context.read<TransactionProvider>().deleteTransaction(
         transactionId,
       );
+
+      // Refresh pagination after delete
+      _refreshPagination();
 
       SnackbarHelper.showSuccess(
         context: context,
@@ -479,14 +678,13 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  // Date Range Picker - Use callback properly
+                  // Date Range Picker
                   DateRangePicker(
                     initialStartDate:
                         _exportStartDate ??
                         DateTime.now().subtract(const Duration(days: 30)),
                     initialEndDate: _exportEndDate ?? DateTime.now(),
                     onDateRangeSelected: (startDate, endDate) {
-                      // Don't call setState immediately, schedule it for next frame
                       WidgetsBinding.instance.addPostFrameCallback((_) {
                         if (mounted) {
                           setState(() {
@@ -569,7 +767,7 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
             fileInfo['directory'] ??
             filePath.substring(0, filePath.lastIndexOf('/'));
 
-        // Create action buttons dengan error handling yang lebih baik
+        // Create action buttons
         Widget actionButtons = Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -726,7 +924,9 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
   }
 
   Future<void> _refreshData() async {
-    await context.read<TransactionProvider>().refreshTransactions();
+    // Refresh both balance data and paginated list
+    await context.read<TransactionProvider>().loadTransactions();
+    _refreshPagination();
   }
 
   Widget _buildHeaderWithBalanceCard(double screenWidth) {
@@ -735,7 +935,6 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
       child: Stack(
         children: [
           FinancialHeader(screenWidth: screenWidth, showGreeting: false),
-
           Positioned(
             left: 24,
             top: 100,

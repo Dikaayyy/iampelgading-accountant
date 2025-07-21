@@ -100,8 +100,8 @@ class CsvExportService {
         _escapeCsvValue(transaction.description),
         _escapeCsvValue(transaction.paymentMethod),
         amount,
-        transaction.quantity?.toString() ?? '1',
-        transaction.pricePerItem?.toStringAsFixed(0) ?? amount,
+        transaction.quantity.toString(),
+        transaction.pricePerItem.toStringAsFixed(0),
         jenis,
       ].join(',');
 

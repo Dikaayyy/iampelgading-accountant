@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
+import 'package:iampelgading/features/transaction/domain/usecases/get_transactions_paginaed_usecase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Auth
@@ -62,11 +63,19 @@ Future<void> init() async {
 
   sl.registerLazySingleton(() => AddTransaction(sl()));
   sl.registerLazySingleton(() => GetTransactions(sl()));
+  sl.registerLazySingleton(() => GetTransactionsPaginated(sl()));
   sl.registerLazySingleton(() => UpdateTransaction(sl()));
   sl.registerLazySingleton(() => DeleteTransaction(sl()));
   sl.registerLazySingleton(() => ExportTransactions(sl()));
 
   sl.registerLazySingleton(
-    () => TransactionProvider(sl(), sl(), sl(), sl(), sl()),
+    () => TransactionProvider(
+      sl<AddTransaction>(),
+      sl<GetTransactions>(),
+      sl<GetTransactionsPaginated>(),
+      sl<UpdateTransaction>(),
+      sl<DeleteTransaction>(),
+      sl<ExportTransactions>(),
+    ),
   );
 }

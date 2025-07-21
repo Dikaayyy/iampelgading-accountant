@@ -9,6 +9,24 @@ class TransactionRepositoryImpl implements TransactionRepository {
   TransactionRepositoryImpl({required this.remoteDataSource});
 
   @override
+  Future<PaginatedTransactionResponse> getTransactionsPaginated({
+    int page = 1,
+    int limit = 10,
+    String? search,
+  }) async {
+    try {
+      final response = await remoteDataSource.getTransactionsPaginated(
+        page: page,
+        limit: limit,
+        search: search,
+      );
+      return response;
+    } catch (e) {
+      throw Exception('Failed to get paginated transactions: $e');
+    }
+  }
+
+  @override
   Future<List<Transaction>> getTransactions() async {
     try {
       final remoteTransactions = await remoteDataSource.getTransactions();

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:iampelgading/features/transaction/domain/usecases/get_transactions_paginaed_usecase.dart';
 import 'package:iampelgading/features/transaction/domain/usecases/get_transactions_usecase.dart';
 import 'package:intl/intl.dart';
 import 'package:iampelgading/features/transaction/domain/usecases/add_transaction.dart';
@@ -9,10 +10,12 @@ import 'package:iampelgading/core/services/auth_service.dart';
 import 'package:iampelgading/core/di/service_locator.dart' as di;
 import 'package:iampelgading/features/transaction/domain/usecases/export_transactions_usecase.dart';
 import 'package:iampelgading/core/services/csv_export_service.dart';
+import 'package:iampelgading/features/transaction/data/datasources/transaction_remote_datasource.dart';
 
 class TransactionProvider with ChangeNotifier {
   final AddTransaction? _addTransaction;
   final GetTransactions? _getTransactions;
+  final GetTransactionsPaginated? _getTransactionsPaginated;
   final UpdateTransaction? _updateTransaction;
   final DeleteTransaction? _deleteTransaction;
   final ExportTransactions? _exportTransactions;
@@ -44,16 +47,28 @@ class TransactionProvider with ChangeNotifier {
   String _searchQuery = '';
   String? _selectedFilter;
 
+  // Pagination properties
+  List<Transaction> _paginatedTransactions = [];
+  bool _isLoadingMoreTransactions = false;
+  bool _hasMoreTransactions = true;
+  int _currentPage = 1;
+  static const int _pageSize = 10;
+
   // Getters
   DateTime get selectedDate => _selectedDate;
   TimeOfDay get selectedTime => _selectedTime;
   bool get isLoading => _isLoading;
   bool get isLoadingTransactions => _isLoadingTransactions;
+  bool get isLoadingMoreTransactions => _isLoadingMoreTransactions;
+  bool get hasMoreTransactions => _hasMoreTransactions;
   String? get selectedPaymentMethod => _selectedPaymentMethod;
   double get totalAmount => _totalAmount;
-  List<Transaction> get transactions => _transactions; // Always all data
+  List<Transaction> get transactions =>
+      _transactions; // Always all data for balance calculation
+  List<Transaction> get paginatedTransactions =>
+      _paginatedTransactions; // For paginated display
   List<Transaction> get filteredTransactions =>
-      _filteredTransactions; // For display
+      _filteredTransactions; // For search display
   String get searchQuery => _searchQuery;
   String? get selectedFilter => _selectedFilter;
   String? get errorMessage => _errorMessage;
@@ -86,17 +101,17 @@ class TransactionProvider with ChangeNotifier {
   TransactionProvider([
     this._addTransaction,
     this._getTransactions,
+    this._getTransactionsPaginated,
     this._updateTransaction,
     this._deleteTransaction,
     this._exportTransactions,
   ]) {
     _initializeDefaultValues();
     quantityController.text = '0';
-    // Load transactions when provider is initialized
     loadTransactions();
   }
 
-  // Load transactions from API
+  // Load all transactions for balance calculation and export
   Future<void> loadTransactions() async {
     if (_getTransactions == null) return;
 
@@ -106,7 +121,6 @@ class TransactionProvider with ChangeNotifier {
 
     try {
       _transactions = await _getTransactions.call();
-      _applyFilters(); // Apply current filters to new data
       _isLoadingTransactions = false;
       notifyListeners();
     } catch (e) {
@@ -119,6 +133,62 @@ class TransactionProvider with ChangeNotifier {
 
       notifyListeners();
       throw Exception('Failed to load transactions: $e');
+    }
+  }
+
+  // Load paginated transactions for display
+  Future<void> loadPaginatedTransactions({bool refresh = false}) async {
+    if (_getTransactionsPaginated == null) return;
+
+    if (refresh) {
+      _currentPage = 1;
+      _paginatedTransactions.clear();
+      _hasMoreTransactions = true;
+    }
+
+    if (!_hasMoreTransactions || _isLoadingMoreTransactions) return;
+
+    if (_currentPage == 1) {
+      _isLoadingTransactions = true;
+    } else {
+      _isLoadingMoreTransactions = true;
+    }
+
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _getTransactionsPaginated!.call(
+        page: _currentPage,
+        limit: _pageSize,
+        search: _searchQuery.isEmpty ? null : _searchQuery,
+      );
+
+      if (_currentPage == 1) {
+        _paginatedTransactions = response.data;
+      } else {
+        _paginatedTransactions.addAll(response.data);
+      }
+
+      _hasMoreTransactions = response.hasNextPage;
+      _currentPage = response.currentPage + 1;
+
+      _applyFiltersToTransactions(_paginatedTransactions);
+
+      _isLoadingTransactions = false;
+      _isLoadingMoreTransactions = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoadingTransactions = false;
+      _isLoadingMoreTransactions = false;
+      _errorMessage = e.toString();
+
+      if (e.toString().contains('Unauthorized')) {
+        await _handleUnauthorized();
+      }
+
+      notifyListeners();
+      throw Exception('Failed to load paginated transactions: $e');
     }
   }
 
@@ -135,7 +205,10 @@ class TransactionProvider with ChangeNotifier {
 
   // Refresh transactions
   Future<void> refreshTransactions() async {
-    await loadTransactions();
+    await Future.wait([
+      loadTransactions(),
+      loadPaginatedTransactions(refresh: true),
+    ]);
   }
 
   // Clear error message
@@ -147,7 +220,13 @@ class TransactionProvider with ChangeNotifier {
   // Search functionality
   void updateSearchQuery(String query) {
     _searchQuery = query;
-    _applyFilters();
+    if (query.isEmpty) {
+      // If search is cleared, reload paginated data
+      loadPaginatedTransactions(refresh: true);
+    } else {
+      // Apply search filter to existing paginated data
+      _applyFilters();
+    }
     notifyListeners();
   }
 
@@ -162,7 +241,7 @@ class TransactionProvider with ChangeNotifier {
   void clearSearchAndFilters() {
     _searchQuery = '';
     _selectedFilter = null;
-    _applyFilters();
+    loadPaginatedTransactions(refresh: true);
     notifyListeners();
   }
 
@@ -183,8 +262,12 @@ class TransactionProvider with ChangeNotifier {
 
   // Apply search and filters to transactions
   void _applyFilters() {
+    _applyFiltersToTransactions(_paginatedTransactions);
+  }
+
+  void _applyFiltersToTransactions(List<Transaction> sourceTransactions) {
     _filteredTransactions =
-        _transactions.where((transaction) {
+        sourceTransactions.where((transaction) {
           // Apply search filter
           bool matchesSearch = true;
           if (_searchQuery.isNotEmpty) {
@@ -226,7 +309,13 @@ class TransactionProvider with ChangeNotifier {
   Map<String, List<Transaction>> getFilteredTransactionsGroupedByMonth() {
     final Map<String, List<Transaction>> grouped = {};
 
-    for (final transaction in _filteredTransactions) {
+    // Use filtered transactions if there's a search query, otherwise use paginated transactions
+    final transactionsToGroup =
+        _searchQuery.isNotEmpty
+            ? _filteredTransactions
+            : _paginatedTransactions;
+
+    for (final transaction in transactionsToGroup) {
       final monthKey = DateFormat(
         'MMMM yyyy',
         'id_ID',
@@ -401,8 +490,11 @@ class TransactionProvider with ChangeNotifier {
         // Add the created transaction to local list
         _transactions.add(createdTransaction);
 
-        // Refresh transactions from server
-        await loadTransactions();
+        // Refresh both transaction lists
+        await Future.wait([
+          loadTransactions(),
+          loadPaginatedTransactions(refresh: true),
+        ]);
 
         // Clear form after successful save
         resetForm();
@@ -472,8 +564,11 @@ class TransactionProvider with ChangeNotifier {
           _transactions[index] = updatedTransaction;
         }
 
-        // Refresh transactions from server
-        await loadTransactions();
+        // Refresh both transaction lists
+        await Future.wait([
+          loadTransactions(),
+          loadPaginatedTransactions(refresh: true),
+        ]);
       } else {
         await Future.delayed(const Duration(seconds: 2));
       }
@@ -510,9 +605,15 @@ class TransactionProvider with ChangeNotifier {
       _transactions.removeWhere(
         (transaction) => transaction.id == transactionId,
       );
+      _paginatedTransactions.removeWhere(
+        (transaction) => transaction.id == transactionId,
+      );
 
-      // Refresh transactions from server to ensure we have the latest data
-      await loadTransactions();
+      // Refresh both transaction lists
+      await Future.wait([
+        loadTransactions(),
+        loadPaginatedTransactions(refresh: true),
+      ]);
 
       _isLoading = false;
       notifyListeners();
@@ -608,7 +709,6 @@ class TransactionProvider with ChangeNotifier {
           _selectedDate = parsedDate;
           dateController.text = dateStr;
         } catch (e) {
-          // If parsing fails, use current date
           _selectedDate = DateTime.now();
           dateController.text = DateFormat(
             'dd MMMM yyyy',
@@ -640,13 +740,10 @@ class TransactionProvider with ChangeNotifier {
         if (timeParts.length >= 2) {
           final hour = int.tryParse(timeParts[0]) ?? 0;
           final minute = int.tryParse(timeParts[1]) ?? 0;
-
-          // Use the actual time from database
           _selectedTime = TimeOfDay(hour: hour, minute: minute);
           timeController.text =
               '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
         } else {
-          // If time format is invalid, use 00:00
           _selectedTime = const TimeOfDay(hour: 0, minute: 0);
           timeController.text = '00:00';
         }
@@ -688,7 +785,7 @@ class TransactionProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Filter transactions by date range
+      // Filter transactions by date range - use ALL transactions for export
       final filteredTransactions =
           _transactions.where((transaction) {
             final transactionDate = DateTime(
@@ -725,6 +822,9 @@ class TransactionProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  GetTransactionsPaginated? get getTransactionsPaginated =>
+      _getTransactionsPaginated;
 }
 
 // Global navigator key for context access
