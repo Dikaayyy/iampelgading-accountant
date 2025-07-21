@@ -73,6 +73,11 @@ class TransactionProvider with ChangeNotifier {
   String? get selectedFilter => _selectedFilter;
   String? get errorMessage => _errorMessage;
 
+  // Add the missing getters
+  GetTransactions? get getTransactions => _getTransactions;
+  GetTransactionsPaginated? get getTransactionsPaginated =>
+      _getTransactionsPaginated;
+
   // Lists
   List<String> get paymentMethods => [
     'Cash',
@@ -148,47 +153,29 @@ class TransactionProvider with ChangeNotifier {
 
     if (!_hasMoreTransactions || _isLoadingMoreTransactions) return;
 
-    if (_currentPage == 1) {
-      _isLoadingTransactions = true;
-    } else {
-      _isLoadingMoreTransactions = true;
-    }
-
-    _errorMessage = null;
+    _isLoadingMoreTransactions = true;
     notifyListeners();
 
     try {
-      final response = await _getTransactionsPaginated!.call(
+      final response = await _getTransactionsPaginated!(
         page: _currentPage,
         limit: _pageSize,
-        search: _searchQuery.isEmpty ? null : _searchQuery,
+        search: _searchQuery, // Pastikan query digunakan
       );
 
-      if (_currentPage == 1) {
+      if (refresh) {
         _paginatedTransactions = response.data;
       } else {
         _paginatedTransactions.addAll(response.data);
       }
 
       _hasMoreTransactions = response.hasNextPage;
-      _currentPage = response.currentPage + 1;
-
-      _applyFiltersToTransactions(_paginatedTransactions);
-
-      _isLoadingTransactions = false;
-      _isLoadingMoreTransactions = false;
-      notifyListeners();
+      _currentPage++;
     } catch (e) {
-      _isLoadingTransactions = false;
-      _isLoadingMoreTransactions = false;
       _errorMessage = e.toString();
-
-      if (e.toString().contains('Unauthorized')) {
-        await _handleUnauthorized();
-      }
-
+    } finally {
+      _isLoadingMoreTransactions = false;
       notifyListeners();
-      throw Exception('Failed to load paginated transactions: $e');
     }
   }
 
@@ -220,13 +207,7 @@ class TransactionProvider with ChangeNotifier {
   // Search functionality
   void updateSearchQuery(String query) {
     _searchQuery = query;
-    if (query.isEmpty) {
-      // If search is cleared, reload paginated data
-      loadPaginatedTransactions(refresh: true);
-    } else {
-      // Apply search filter to existing paginated data
-      _applyFilters();
-    }
+    loadPaginatedTransactions(refresh: true);
     notifyListeners();
   }
 
@@ -822,9 +803,6 @@ class TransactionProvider with ChangeNotifier {
       notifyListeners();
     }
   }
-
-  GetTransactionsPaginated? get getTransactionsPaginated =>
-      _getTransactionsPaginated;
 }
 
 // Global navigator key for context access

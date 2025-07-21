@@ -23,6 +23,7 @@ import 'dart:io';
 import 'package:iampelgading/core/services/file_opener_service.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:iampelgading/features/transaction/domain/entities/transaction.dart';
+import 'dart:async'; // Add this import
 
 class FinancialRecordsPage extends StatefulWidget {
   const FinancialRecordsPage({super.key});
@@ -46,6 +47,9 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
   // Add these fields
   DateTime? _exportStartDate;
   DateTime? _exportEndDate;
+
+  // Add debounce timer for search
+  Timer? _searchDebounce;
 
   // Static page size
   static const int _pageSize = 10;
@@ -71,7 +75,7 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
     // Listen to navigation changes
     NavigationService().controller.addListener(_onNavigationChanged);
 
-    // Listen to search changes
+    // Listen to search changes with debounce
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -80,6 +84,7 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
     _searchController.dispose();
     _searchFocusNode.dispose();
     _pagingController.dispose();
+    _searchDebounce?.cancel(); // Cancel debounce timer
     NavigationService().controller.removeListener(_onNavigationChanged);
     _searchController.removeListener(_onSearchChanged);
     super.dispose();
@@ -87,8 +92,7 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
 
   void _onNavigationChanged() {
     final currentIndex = NavigationService().controller.index;
-    final isFinancialRecordsPage =
-        currentIndex == 2; // Financial records is now at index 2
+    final isFinancialRecordsPage = currentIndex == 2;
 
     if (_isCurrentPage != isFinancialRecordsPage) {
       setState(() {
@@ -103,11 +107,30 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
   }
 
   void _onSearchChanged() {
-    // Debounce search to avoid too many API calls
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (_searchController.text !=
-          context.read<TransactionProvider>().searchQuery) {
-        _refreshPagination();
+    // Cancel previous timer
+    _searchDebounce?.cancel();
+
+    // Set new timer with 500ms delay
+    _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        final currentSearchQuery = _searchController.text.trim();
+        final providerSearchQuery =
+            context.read<TransactionProvider>().searchQuery;
+
+        // Only update if search query actually changed
+        if (currentSearchQuery != providerSearchQuery) {
+          print(
+            'Search query changed from "$providerSearchQuery" to "$currentSearchQuery"',
+          );
+
+          // Update provider search query
+          context.read<TransactionProvider>().updateSearchQuery(
+            currentSearchQuery,
+          );
+
+          // Reset and refresh pagination
+          _refreshPagination();
+        }
       }
     });
   }
@@ -125,43 +148,74 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
 
   Future<void> _fetchPage(int pageKey) async {
     try {
-      print('Fetching page: $pageKey'); // Debug log
-
       final provider = context.read<TransactionProvider>();
-      final response = await provider.getTransactionsPaginated?.call(
-        page: pageKey,
-        limit: _pageSize,
-        search:
-            _searchController.text.isNotEmpty ? _searchController.text : null,
-      );
+      final searchQuery = _searchController.text.trim();
 
-      print(
-        'Response received for page $pageKey: hasNextPage=${response?.hasNextPage}, totalPages=${response?.totalPages}, currentPage=${response?.currentPage}, dataCount=${response?.data.length}',
-      );
+      print('Fetching page $pageKey with search: "$searchQuery"');
 
-      if (response != null) {
-        final isLastPage = !response.hasNextPage;
+      if (searchQuery.isNotEmpty) {
+        // For search: get all transactions and filter locally
+        if (pageKey == 1) {
+          // Only fetch on first page for search
+          final allTransactions = await provider.getTransactions?.call();
 
-        print('Is last page: $isLastPage'); // Debug log
+          if (allTransactions != null) {
+            // Filter transactions by search query
+            final filteredTransactions =
+                allTransactions.where((transaction) {
+                  return transaction.title.toLowerCase().contains(
+                        searchQuery.toLowerCase(),
+                      ) ||
+                      transaction.description.toLowerCase().contains(
+                        searchQuery.toLowerCase(),
+                      );
+                }).toList();
 
-        if (isLastPage) {
-          _pagingController.appendLastPage(response.data);
+            print(
+              'Filtered ${filteredTransactions.length} transactions from ${allTransactions.length} total',
+            );
+
+            // For search results, show all filtered results at once
+            _pagingController.appendLastPage(filteredTransactions);
+          } else {
+            _pagingController.appendLastPage([]);
+          }
         } else {
-          final nextPageKey = pageKey + 1;
-          print('Appending page with nextPageKey: $nextPageKey'); // Debug log
-          _pagingController.appendPage(response.data, nextPageKey);
+          // For search, we don't have additional pages since we load all at once
+          _pagingController.appendLastPage([]);
         }
       } else {
-        print('Response is null, appending empty last page'); // Debug log
-        _pagingController.appendLastPage([]);
+        // For normal pagination (no search)
+        final response = await provider.getTransactionsPaginated?.call(
+          page: pageKey,
+          limit: _pageSize,
+          search: null, // No search parameter
+        );
+
+        if (response != null) {
+          final isLastPage = !response.hasNextPage;
+
+          print('Fetched ${response.data.length} paginated items');
+          print('Is last page: $isLastPage');
+
+          if (isLastPage) {
+            _pagingController.appendLastPage(response.data);
+          } else {
+            final nextPageKey = pageKey + 1;
+            _pagingController.appendPage(response.data, nextPageKey);
+          }
+        } else {
+          _pagingController.appendLastPage([]);
+        }
       }
     } catch (error) {
-      print('Error fetching page $pageKey: $error'); // Debug log
+      print('Error fetching page: $error');
       _pagingController.error = error;
     }
   }
 
   void _refreshPagination() {
+    print('Refreshing pagination...');
     _pagingController.refresh();
   }
 
@@ -196,8 +250,15 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
                             focusNode: _searchFocusNode,
                             hintText: 'Cari transaksi...',
                             onChanged: (value) {
-                              provider.updateSearchQuery(value);
+                              // Let the listener handle the search logic
                             },
+                            suffixIcon:
+                                _searchController.text.isNotEmpty
+                                    ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: _clearSearch,
+                                    )
+                                    : null,
                           );
                         },
                       ),
