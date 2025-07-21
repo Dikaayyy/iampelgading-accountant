@@ -3,7 +3,7 @@ import 'package:iampelgading/core/widgets/custom_snackbar.dart';
 import 'package:iampelgading/core/utils/error_handler.dart';
 
 class SnackbarManager {
-  // Show success snackbar
+  // Show success snackbar with action button
   static void showSuccess({
     required BuildContext context,
     required String message,
@@ -11,6 +11,7 @@ class SnackbarManager {
     IconData? icon,
     Duration? duration,
     bool showAtTop = true,
+    Widget? actionButton, // Add action button parameter
   }) {
     CustomSnackbar.showSuccess(
       context: context,
@@ -18,7 +19,10 @@ class SnackbarManager {
       message: message,
       icon: icon ?? Icons.check_circle,
       showAtTop: showAtTop,
-      duration: duration ?? const Duration(seconds: 2),
+      duration:
+          duration ??
+          const Duration(seconds: 4), // Increase duration for action
+      actionButton: actionButton, // Pass action button
     );
   }
 

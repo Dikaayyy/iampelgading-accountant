@@ -18,6 +18,9 @@ import 'package:iampelgading/core/widgets/date_range_picker.dart';
 import 'package:iampelgading/core/widgets/custom_button.dart';
 import 'package:iampelgading/core/widgets/permission_dialog.dart';
 import 'package:iampelgading/core/services/permission_service.dart';
+import 'package:open_file/open_file.dart';
+import 'dart:io';
+import 'package:iampelgading/core/services/file_opener_service.dart';
 
 class FinancialRecordsPage extends StatefulWidget {
   const FinancialRecordsPage({super.key});
@@ -552,16 +555,6 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
         Navigator.of(sheetContext).pop();
       }
 
-      // Show loading
-      if (mounted) {
-        SnackbarHelper.showInfo(
-          context: context,
-          title: 'Mengekspor Data',
-          message: 'Sedang memproses data transaksi...',
-          showAtTop: true,
-        );
-      }
-
       final filePath = await context
           .read<TransactionProvider>()
           .exportTransactionsToCsv(
@@ -570,14 +563,138 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
           );
 
       if (mounted) {
-        final fileName = filePath.split('/').last;
+        final fileInfo = await FileOpenerService.getFileInfo(filePath);
+        final fileName = fileInfo['name'] ?? filePath.split('/').last;
+        final folderPath =
+            fileInfo['directory'] ??
+            filePath.substring(0, filePath.lastIndexOf('/'));
+
+        // Create action buttons dengan error handling yang lebih baik
+        Widget actionButtons = Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Open File button
+            Expanded(
+              child: SizedBox(
+                height: 32,
+                child: TextButton.icon(
+                  onPressed: () async {
+                    try {
+                      final canOpen = await FileOpenerService.canOpenFile(
+                        filePath,
+                      );
+                      if (!canOpen) {
+                        if (mounted) {
+                          SnackbarHelper.showWarning(
+                            context: context,
+                            title: 'File Tidak Dapat Dibuka',
+                            message:
+                                'Format file tidak didukung atau file tidak ditemukan',
+                            showAtTop: true,
+                          );
+                        }
+                        return;
+                      }
+
+                      final success = await FileOpenerService.openFile(
+                        filePath,
+                      );
+                      if (!success && mounted) {
+                        SnackbarHelper.showWarning(
+                          context: context,
+                          title: 'Tidak Bisa Buka File',
+                          message:
+                              'Tidak ada aplikasi yang bisa membuka file CSV. File tersimpan di: $fileName',
+                          showAtTop: true,
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        SnackbarHelper.showError(
+                          context: context,
+                          title: 'Error',
+                          message: 'Gagal membuka file: ${e.toString()}',
+                          showAtTop: true,
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.open_in_new, size: 16),
+                  label: const Text(
+                    'Buka File',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.success[500],
+                    backgroundColor: AppColors.success[100]?.withOpacity(0.5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            // Open Folder button
+            Expanded(
+              child: SizedBox(
+                height: 32,
+                child: TextButton.icon(
+                  onPressed: () async {
+                    try {
+                      final success = await FileOpenerService.openFolder(
+                        folderPath,
+                      );
+                      if (!success && mounted) {
+                        SnackbarHelper.showInfo(
+                          context: context,
+                          title: 'Info',
+                          message: 'File tersimpan di: $folderPath',
+                          showAtTop: true,
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        SnackbarHelper.showInfo(
+                          context: context,
+                          title: 'Lokasi File',
+                          message: 'File tersimpan di: $folderPath',
+                          showAtTop: true,
+                        );
+                      }
+                    }
+                  },
+                  icon: const Icon(Icons.folder_open, size: 16),
+                  label: const Text(
+                    'Buka Folder',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.base,
+                    backgroundColor: AppColors.base.withOpacity(0.1),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
 
         SnackbarHelper.showSuccess(
           context: context,
           title: 'Ekspor Berhasil',
           message:
-              'Data berhasil diekspor ke: Download/iampelgading/csv/$fileName',
+              'Data berhasil diekspor ke: $fileName (${fileInfo['size'] ?? 'Unknown size'})',
           showAtTop: true,
+          actionButton: actionButtons,
         );
       }
     } catch (e) {

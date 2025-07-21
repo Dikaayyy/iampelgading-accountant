@@ -20,6 +20,7 @@ class CustomSnackbar extends StatelessWidget {
   final double? width;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
+  final Widget? actionButton; // Add action button parameter
 
   const CustomSnackbar({
     super.key,
@@ -36,6 +37,7 @@ class CustomSnackbar extends StatelessWidget {
     this.width,
     this.padding,
     this.margin,
+    this.actionButton, // Add parameter
   });
 
   @override
@@ -64,59 +66,76 @@ class CustomSnackbar extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(14),
-          child: Row(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Icon Container
-              if (icon != null || config.icon != null)
-                Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
-                    color: (iconColor ?? config.iconColor).withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    icon ?? config.icon,
-                    color: iconColor ?? config.iconColor,
-                    size: 24,
-                  ),
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Icon Container
+                  if (icon != null || config.icon != null)
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: (iconColor ?? config.iconColor).withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        icon ?? config.icon,
+                        color: iconColor ?? config.iconColor,
+                        size: 24,
+                      ),
+                    ),
 
-              if (icon != null || config.icon != null)
-                const SizedBox(width: 16),
+                  if (icon != null || config.icon != null)
+                    const SizedBox(width: 16),
 
-              // Content
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  // Content
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title
+                        Text(
+                          title,
+                          style: AppTextStyles.h4.copyWith(
+                            color: titleColor ?? config.titleColor,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        // Message
+                        Text(
+                          message,
+                          style: AppTextStyles.body.copyWith(
+                            color: messageColor ?? config.messageColor,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              // Action button if provided
+              if (actionButton != null) ...[
+                const SizedBox(height: 12),
+                Row(
                   children: [
-                    // Title
-                    Text(
-                      title,
-                      style: AppTextStyles.h4.copyWith(
-                        color: titleColor ?? config.titleColor,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-
-                    const SizedBox(height: 4),
-
-                    // Message
-                    Text(
-                      message,
-                      style: AppTextStyles.body.copyWith(
-                        color: messageColor ?? config.messageColor,
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
+                    if (icon != null || config.icon != null)
+                      const SizedBox(width: 58), // Align with content
+                    Expanded(child: actionButton!),
                   ],
                 ),
-              ),
+              ],
             ],
           ),
         ),
@@ -219,6 +238,7 @@ class CustomSnackbar extends StatelessWidget {
     double? width,
     EdgeInsetsGeometry? padding,
     EdgeInsetsGeometry? margin,
+    Widget? actionButton, // Add parameter
   }) {
     final overlay = Overlay.of(context);
     late OverlayEntry overlayEntry;
@@ -226,7 +246,7 @@ class CustomSnackbar extends StatelessWidget {
     overlayEntry = OverlayEntry(
       builder:
           (context) => Positioned(
-            top: MediaQuery.of(context).padding.top + 20, // Position at top
+            top: MediaQuery.of(context).padding.top + 20,
             left: 0,
             right: 0,
             child: Material(
@@ -246,6 +266,7 @@ class CustomSnackbar extends StatelessWidget {
                   width: width,
                   padding: padding,
                   margin: margin,
+                  actionButton: actionButton, // Pass parameter
                 ),
               ),
             ),
@@ -254,10 +275,15 @@ class CustomSnackbar extends StatelessWidget {
 
     overlay.insert(overlayEntry);
 
-    // Remove after duration
-    Future.delayed(duration ?? const Duration(seconds: 4), () {
-      overlayEntry.remove();
-    });
+    // Remove after duration with longer time if action button present
+    Future.delayed(
+      duration ?? Duration(seconds: actionButton != null ? 6 : 4),
+      () {
+        if (overlayEntry.mounted) {
+          overlayEntry.remove();
+        }
+      },
+    );
   }
 
   // Predefined methods untuk kemudahan penggunaan
@@ -269,6 +295,7 @@ class CustomSnackbar extends StatelessWidget {
     VoidCallback? onTap,
     Duration? duration,
     bool showAtTop = false,
+    Widget? actionButton, // Add parameter
   }) {
     if (showAtTop) {
       showTop(
@@ -279,6 +306,7 @@ class CustomSnackbar extends StatelessWidget {
         icon: icon,
         onTap: onTap,
         duration: duration,
+        actionButton: actionButton, // Pass parameter
       );
     } else {
       show(

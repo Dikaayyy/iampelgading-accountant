@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:iampelgading/core/widgets/custom_snackbar.dart';
 
 class SnackbarHelper {
-  // Success snackbar
+  // Success snackbar with action button support
   static void showSuccess({
     required BuildContext context,
     required String title,
@@ -10,7 +10,8 @@ class SnackbarHelper {
     IconData? icon,
     VoidCallback? onTap,
     Duration? duration,
-    bool showAtTop = true, // Default to show at top
+    bool showAtTop = true,
+    Widget? actionButton, // Add action button parameter
   }) {
     CustomSnackbar.showSuccess(
       context: context,
@@ -20,6 +21,7 @@ class SnackbarHelper {
       onTap: onTap,
       duration: duration,
       showAtTop: showAtTop,
+      actionButton: actionButton, // Pass action button
     );
   }
 
