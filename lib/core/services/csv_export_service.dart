@@ -80,36 +80,30 @@ class CsvExportService {
   ) {
     final buffer = StringBuffer();
 
-    // Add header with new format
-    buffer.writeln('Tanggal,Transaksi,Pemasukan,Pengeluaran,Saldo');
-
-    // Sort transactions by date
-    final sortedTransactions = List<Transaction>.from(transactions)
-      ..sort((a, b) => a.date.compareTo(b.date));
-
-    // Calculate running balance
-    double runningBalance = 0;
+    // Add header
+    buffer.writeln(
+      'Tanggal,Waktu,Kategori,Keterangan,Metode Pembayaran,Jumlah,Kuantitas,Harga per Item,Jenis',
+    );
 
     // Add data rows
-    for (final transaction in sortedTransactions) {
+    for (final transaction in transactions) {
       final date = DateFormat('dd/MM/yyyy').format(transaction.date);
-      final transaksi = _escapeCsvValue(transaction.title);
+      final time = DateFormat('HH:mm').format(transaction.date);
+      final amount = transaction.amount.abs().toStringAsFixed(0);
+      final jenis = transaction.isIncome ? 'Pemasukan' : 'Pengeluaran';
 
-      // Calculate pemasukan and pengeluaran
-      final pemasukan =
-          transaction.isIncome
-              ? transaction.amount.abs().toStringAsFixed(0)
-              : '';
-      final pengeluaran =
-          !transaction.isIncome
-              ? transaction.amount.abs().toStringAsFixed(0)
-              : '';
-
-      // Update running balance
-      runningBalance += transaction.amount;
-      final saldo = runningBalance.toStringAsFixed(0);
-
-      final row = [date, transaksi, pemasukan, pengeluaran, saldo].join(',');
+      // Escape CSV values
+      final row = [
+        date,
+        time,
+        _escapeCsvValue(transaction.category),
+        _escapeCsvValue(transaction.description),
+        _escapeCsvValue(transaction.paymentMethod),
+        amount,
+        transaction.quantity?.toString() ?? '1',
+        transaction.pricePerItem?.toStringAsFixed(0) ?? amount,
+        jenis,
+      ].join(',');
 
       buffer.writeln(row);
     }
