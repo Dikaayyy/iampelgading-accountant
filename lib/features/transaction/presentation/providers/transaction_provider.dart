@@ -168,6 +168,8 @@ class TransactionProvider with ChangeNotifier {
       } else {
         _paginatedTransactions.addAll(response.data);
       }
+      // Tambahkan sort agar data selalu urut terbaru
+      _paginatedTransactions.sort((a, b) => b.date.compareTo(a.date));
 
       _hasMoreTransactions = response.hasNextPage;
       _currentPage++;

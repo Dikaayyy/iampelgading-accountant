@@ -935,7 +935,11 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
 
   Future<void> _refreshData() async {
     // Refresh both balance data and paginated list
-    await context.read<TransactionProvider>().loadTransactions();
+    final provider = context.read<TransactionProvider>();
+    await Future.wait([
+      provider.loadTransactions(),
+      provider.loadPaginatedTransactions(refresh: true),
+    ]);
     _refreshPagination();
   }
 
