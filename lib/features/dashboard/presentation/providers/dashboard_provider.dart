@@ -53,7 +53,7 @@ class DashboardProvider with ChangeNotifier {
             .toList();
 
     transactions.sort((a, b) => b.date.compareTo(a.date));
-    return transactions.take(5).toList();
+    return transactions.take(15).toList();
   }
 
   // Convert transactions to map format for UI compatibility
