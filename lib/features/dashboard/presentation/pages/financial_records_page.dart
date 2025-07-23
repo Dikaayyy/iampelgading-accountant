@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:iampelgading/core/widgets/transaction_card.dart';
 import 'package:iampelgading/features/financial_records/presentation/widgets/financial_tab_bar.dart';
-import 'package:iampelgading/features/financial_records/presentation/widgets/financial_transaction_list.dart';
 import 'package:iampelgading/core/widgets/custom_search_field.dart';
 import 'package:iampelgading/core/widgets/custom_app_bar.dart';
 import 'package:provider/provider.dart';
 import 'package:iampelgading/features/transaction/presentation/providers/transaction_provider.dart';
+import 'package:intl/intl.dart';
 
 class FinancialRecordsPage extends StatefulWidget {
   const FinancialRecordsPage({super.key});
@@ -97,11 +98,23 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
       return const Center(child: CircularProgressIndicator());
     }
 
-    // Use filtered transactions instead of all transactions
+    // Filter transaksi hari ini dan pengeluaran
+    final today = DateTime.now();
+    final todayStart = DateTime(today.year, today.month, today.day);
+    final todayEnd = DateTime(today.year, today.month, today.day, 23, 59, 59);
+
     final expenseTransactions =
-        provider.filteredTransactions
-            .where((transaction) => !transaction.isIncome)
-            .map((transaction) => provider.transactionToMap(transaction))
+        provider.transactions
+            .where(
+              (transaction) =>
+                  !transaction.isIncome &&
+                  transaction.date.isAfter(
+                    todayStart.subtract(const Duration(seconds: 1)),
+                  ) &&
+                  transaction.date.isBefore(
+                    todayEnd.add(const Duration(seconds: 1)),
+                  ),
+            )
             .toList();
 
     if (expenseTransactions.isEmpty) {
@@ -116,30 +129,34 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
             ),
             const SizedBox(height: 16),
             Text(
-              provider.searchQuery.isNotEmpty
-                  ? 'Tidak ada pengeluaran yang ditemukan'
-                  : 'Belum ada pengeluaran',
+              'Belum ada pengeluaran hari ini',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            if (provider.searchQuery.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Coba kata kunci lain',
-                style: TextStyle(color: Colors.grey[500], fontSize: 14),
-              ),
-            ],
           ],
         ),
       );
     }
 
-    return FinancialTransactionList(
-      transactions: expenseTransactions,
-      isExpense: true,
+    return ListView.builder(
+      itemCount: expenseTransactions.length,
+      itemBuilder: (context, index) {
+        final tx = expenseTransactions[index];
+        return TransactionCard(
+          title: tx.title,
+          category: tx.category,
+          time: DateFormat('HH:mm').format(tx.date),
+          date: DateFormat('d MMMM yyyy', 'id_ID').format(tx.date),
+          amount: tx.amount,
+          categoryIcon: Icons.trending_down,
+          onTap: () {
+            // detail page logic here
+          },
+        );
+      },
     );
   }
 
@@ -148,11 +165,23 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
       return const Center(child: CircularProgressIndicator());
     }
 
-    // Use filtered transactions instead of all transactions
+    // Filter transaksi hari ini dan pemasukan
+    final today = DateTime.now();
+    final todayStart = DateTime(today.year, today.month, today.day);
+    final todayEnd = DateTime(today.year, today.month, today.day, 23, 59, 59);
+
     final incomeTransactions =
-        provider.filteredTransactions
-            .where((transaction) => transaction.isIncome)
-            .map((transaction) => provider.transactionToMap(transaction))
+        provider.transactions
+            .where(
+              (transaction) =>
+                  transaction.isIncome &&
+                  transaction.date.isAfter(
+                    todayStart.subtract(const Duration(seconds: 1)),
+                  ) &&
+                  transaction.date.isBefore(
+                    todayEnd.add(const Duration(seconds: 1)),
+                  ),
+            )
             .toList();
 
     if (incomeTransactions.isEmpty) {
@@ -167,30 +196,34 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
             ),
             const SizedBox(height: 16),
             Text(
-              provider.searchQuery.isNotEmpty
-                  ? 'Tidak ada pemasukan yang ditemukan'
-                  : 'Belum ada pemasukan',
+              'Belum ada pemasukan hari ini',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
             ),
-            if (provider.searchQuery.isNotEmpty) ...[
-              const SizedBox(height: 8),
-              Text(
-                'Coba kata kunci lain',
-                style: TextStyle(color: Colors.grey[500], fontSize: 14),
-              ),
-            ],
           ],
         ),
       );
     }
 
-    return FinancialTransactionList(
-      transactions: incomeTransactions,
-      isExpense: false,
+    return ListView.builder(
+      itemCount: incomeTransactions.length,
+      itemBuilder: (context, index) {
+        final tx = incomeTransactions[index];
+        return TransactionCard(
+          title: tx.title,
+          category: tx.category,
+          time: DateFormat('HH:mm').format(tx.date),
+          date: DateFormat('d MMMM yyyy', 'id_ID').format(tx.date),
+          amount: tx.amount,
+          categoryIcon: Icons.trending_up,
+          onTap: () {
+            // detail page logic here
+          },
+        );
+      },
     );
   }
 }
