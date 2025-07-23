@@ -142,7 +142,7 @@ class TransactionProvider with ChangeNotifier {
   }
 
   // Load paginated transactions for display
-  Future<void> loadPaginatedTransactions({bool refresh = false}) async {
+  Future<void> loadPaginatedTransactions({bool refresh = true}) async {
     if (_getTransactionsPaginated == null) return;
 
     if (refresh) {
@@ -463,21 +463,16 @@ class TransactionProvider with ChangeNotifier {
           pricePerItem: double.tryParse(priceController.text) ?? 0.0,
         );
 
-        // Debug: Print what we're sending
-
         // Call API to create transaction
         final createdTransaction = await _addTransaction.call(transaction);
 
-        // Add the created transaction to local list
+        // Tambahkan ke list lokal
         _transactions.add(createdTransaction);
 
-        // Refresh both transaction lists
-        await Future.wait([
-          loadTransactions(),
-          loadPaginatedTransactions(refresh: true),
-        ]);
+        // Refresh data dari backend (pastikan data lokal dan paginated fresh)
+        await loadTransactions();
+        await loadPaginatedTransactions(refresh: true);
 
-        // Clear form after successful save
         resetForm();
       } else {
         await Future.delayed(const Duration(seconds: 2));
@@ -489,12 +484,9 @@ class TransactionProvider with ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       _errorMessage = e.toString();
-
-      // If unauthorized, handle logout
       if (e.toString().contains('Unauthorized')) {
         await _handleUnauthorized();
       }
-
       notifyListeners();
       rethrow;
     }
@@ -802,6 +794,11 @@ class TransactionProvider with ChangeNotifier {
       _isExporting = false;
       notifyListeners();
     }
+  }
+
+  // Add this method to refresh pagination from external calls
+  void refreshPaginatedData() {
+    loadPaginatedTransactions(refresh: true);
   }
 }
 

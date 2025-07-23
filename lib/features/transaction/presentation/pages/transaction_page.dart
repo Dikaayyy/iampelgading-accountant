@@ -198,7 +198,7 @@ class _AddTransactionPageState extends State<TransactionPage> {
                     ? 'Pemasukan berhasil disimpan'
                     : 'Pengeluaran berhasil disimpan',
           );
-          Navigator.of(context).pop();
+          Navigator.of(context).pop(true); // Kembalikan true jika berhasil
         }
       } catch (e) {
         if (context.mounted) {

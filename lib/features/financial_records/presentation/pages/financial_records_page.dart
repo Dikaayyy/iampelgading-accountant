@@ -70,6 +70,8 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<TransactionProvider>();
       provider.loadTransactions(); // For balance calculation
+      // Tambahkan listener agar pagination auto refresh saat transaksi berubah
+      provider.addListener(_onProviderChanged);
     });
 
     // Listen to navigation changes
@@ -81,6 +83,8 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
 
   @override
   void dispose() {
+    // Hapus listener agar tidak memory leak
+    context.read<TransactionProvider>().removeListener(_onProviderChanged);
     _searchController.dispose();
     _searchFocusNode.dispose();
     _pagingController.dispose();
@@ -1020,5 +1024,11 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
         ],
       ),
     );
+  }
+
+  // Tambahkan fungsi listener
+  void _onProviderChanged() {
+    // Hanya refresh paginated list, bukan loadTransactions
+    _refreshPagination();
   }
 }
