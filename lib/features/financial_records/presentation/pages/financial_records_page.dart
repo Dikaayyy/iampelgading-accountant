@@ -363,9 +363,10 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
                     '${transaction.date.day} ${_getMonthName(transaction.date.month)} ${transaction.date.year}',
                 amount: transaction.amount,
                 icon:
-                    transaction.isIncome
-                        ? Icons.arrow_downward
-                        : Icons.arrow_upward,
+                    context.read<TransactionProvider>().transactionToMap(
+                          transaction,
+                        )['icon']
+                        as IconData,
                 transactionData: context
                     .read<TransactionProvider>()
                     .transactionToMap(transaction),

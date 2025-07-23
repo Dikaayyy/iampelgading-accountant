@@ -135,9 +135,9 @@ class UnifiedTransactionItem extends StatelessWidget {
                         width: 20,
                         height: 20,
                         child: Icon(
-                          isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+                          isIncome ? Icons.arrow_upward : Icons.arrow_downward,
                           size: 20,
-                          color: amountColor,
+                          color: isIncome ? Colors.green : Colors.red,
                         ),
                       ),
                       const SizedBox(width: 4),

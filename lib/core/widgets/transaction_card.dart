@@ -66,7 +66,7 @@ class TransactionCard extends StatelessWidget {
 
                   child: Icon(
                     categoryIcon ??
-                        (isIncome ? Icons.arrow_upward : Icons.arrow_downward),
+                        (isIncome ? Icons.arrow_downward : Icons.arrow_upward),
                     size: 20,
                     color:
                         categoryIconColor ??
