@@ -37,85 +37,51 @@ class _ProfileViewState extends State<ProfileView> {
             physics: const AlwaysScrollableScrollPhysics(),
             child: SizedBox(
               width: double.infinity,
-              height: 890,
+              height: 640, // Reduced height since we're removing profile image
               child: Stack(
                 children: [
                   ProfileHeader(screenWidth: screenWidth),
 
+                  // Back Button
                   Positioned(
-                    left: 0,
-                    top: 222,
-                    child: SizedBox(
-                      width: screenWidth,
-                      child: ProfileMenuSection(
-                        currentUsername: provider.userName,
-                        currentImageUrl: provider.profileImageUrl,
-                        onProfileUpdated: (username, imageUrl) {
-                          provider.updateUserName(username);
-                          if (imageUrl != null) {
-                            provider.updateProfileImage(imageUrl);
-                          }
-                        },
-                        onChangePassword: provider.onChangePassword,
-                        onChangeUsername: provider.onChangeUsername,
-                        onAppInfo: provider.onAppInfo,
+                    left: 24,
+                    top: MediaQuery.of(context).padding.top + 16,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => Navigator.of(context).pop(),
+                        borderRadius: BorderRadius.circular(25),
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_back,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                        ),
                       ),
                     ),
                   ),
 
-                  Positioned.fill(
-                    child: Align(
-                      alignment: Alignment.topCenter,
-                      child: Container(
-                        margin: const EdgeInsets.only(top: 166),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              width: 111,
-                              height: 111,
-                              decoration: const ShapeDecoration(
-                                color: Color(0xFFFFB74D),
-                                shape: OvalBorder(),
-                              ),
-                              child: ClipOval(
-                                child:
-                                    provider.profileImageUrl.isNotEmpty
-                                        ? Image.network(
-                                          provider.profileImageUrl,
-                                          width: 111,
-                                          height: 111,
-                                          fit: BoxFit.cover,
-                                          errorBuilder: (
-                                            context,
-                                            error,
-                                            stackTrace,
-                                          ) {
-                                            return const Icon(
-                                              Icons.person,
-                                              size: 60,
-                                              color: Colors.white,
-                                            );
-                                          },
-                                        )
-                                        : const Icon(
-                                          Icons.person,
-                                          size: 60,
-                                          color: Colors.white,
-                                        ),
-                              ),
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              provider.userName,
-                              style: AppTextStyles.h4.copyWith(
-                                color: const Color(0xFF343434),
-                                fontWeight: FontWeight.w500,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
+                  Positioned(
+                    left: 0,
+                    top:
+                        200, // Adjusted position since we're removing the profile image
+                    child: SizedBox(
+                      width: screenWidth,
+                      child: ProfileMenuSection(
+                        onChangePassword: provider.onChangePassword,
+                        onChangeUsername: provider.onChangeUsername,
+                        onAppInfo: provider.onAppInfo,
                       ),
                     ),
                   ),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:iampelgading/core/widgets/custom_button.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:iampelgading/features/profile/presentation/pages/change_password_page.dart';
-import 'package:iampelgading/features/profile/presentation/pages/profile_settings_page.dart';
 import 'package:iampelgading/features/profile/presentation/widgets/profile_menu_item.dart';
 import 'package:iampelgading/features/auth/presentation/pages/login_page.dart';
 
@@ -10,8 +9,6 @@ class ProfileMenuSection extends StatelessWidget {
   final VoidCallback? onChangePassword;
   final VoidCallback? onChangeUsername;
   final VoidCallback? onAppInfo;
-  final String currentUsername;
-  final String? currentImageUrl;
   final Function(String username, String? imageUrl)? onProfileUpdated;
 
   const ProfileMenuSection({
@@ -19,8 +16,6 @@ class ProfileMenuSection extends StatelessWidget {
     this.onChangePassword,
     this.onChangeUsername,
     this.onAppInfo,
-    required this.currentUsername,
-    this.currentImageUrl,
     this.onProfileUpdated,
   });
 
@@ -28,7 +23,12 @@ class ProfileMenuSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.only(top: 130, left: 24, right: 24, bottom: 24),
+      padding: const EdgeInsets.only(
+        top: 30,
+        left: 24,
+        right: 24,
+        bottom: 24,
+      ), // Reduced top padding
       clipBehavior: Clip.antiAlias,
       decoration: const ShapeDecoration(
         color: Color(0xFFFDFCFA),
@@ -44,30 +44,9 @@ class ProfileMenuSection extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ProfileMenuItem(
-            title: 'Pengaturan Profil',
-            icon: Icons.chevron_right,
-            onTap: () async {
-              final result = await PersistentNavBarNavigator.pushNewScreen(
-                context,
-                screen: ProfileSettingsPage(
-                  currentUsername: currentUsername,
-                  currentImageUrl: currentImageUrl,
-                ),
-                withNavBar: false,
-                pageTransitionAnimation: PageTransitionAnimation.cupertino,
-              );
+          // Added username display here since we removed the profile image section
+          Padding(padding: const EdgeInsets.only(bottom: 24)),
 
-              if (result != null && result is Map<String, dynamic>) {
-                final username = result['username'] as String?;
-                final imageUrl = result['imageUrl'] as String?;
-                if (username != null && onProfileUpdated != null) {
-                  onProfileUpdated!(username, imageUrl);
-                }
-              }
-            },
-          ),
-          const SizedBox(height: 12),
           ProfileMenuItem(
             title: 'Ganti Password',
             icon: Icons.chevron_right,
