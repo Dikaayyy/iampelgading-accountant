@@ -45,6 +45,14 @@ class DateTimePicker extends StatelessWidget {
       initialDate: provider.selectedDate,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(
+            context,
+          ).copyWith(dialogBackgroundColor: AppColors.white),
+          child: child!,
+        );
+      },
     );
 
     if (pickedDate != null) {
@@ -56,6 +64,14 @@ class DateTimePicker extends StatelessWidget {
     final pickedTime = await showTimePicker(
       context: context,
       initialTime: provider.selectedTime,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(
+            context,
+          ).copyWith(dialogBackgroundColor: AppColors.white),
+          child: child!,
+        );
+      },
     );
 
     if (pickedTime != null) {

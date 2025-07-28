@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:iampelgading/core/colors/app_colors.dart';
 import 'package:iampelgading/core/widgets/custom_button.dart';
+import 'package:iampelgading/core/widgets/custom_snackbar.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:iampelgading/features/profile/presentation/pages/change_password_page.dart';
 import 'package:iampelgading/features/profile/presentation/widgets/profile_menu_item.dart';
@@ -89,6 +91,7 @@ class ProfileMenuSection extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
+          backgroundColor: AppColors.background,
           title: const Text('Konfirmasi Logout'),
           content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?'),
           actions: [
@@ -110,13 +113,13 @@ class ProfileMenuSection extends StatelessWidget {
   }
 
   void _performLogout(BuildContext context) {
-    // Show logout success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Berhasil logout'),
-        backgroundColor: Colors.green,
-        behavior: SnackBarBehavior.floating,
-      ),
+    // Show logout success message with custom snackbar
+    CustomSnackbar.showSuccess(
+      context: context,
+      title: 'Logout Berhasil',
+      message: 'Anda telah berhasil logout.',
+      icon: Icons.logout,
+      showAtTop: true,
     );
 
     // Navigate to login screen and clear all navigation stack
