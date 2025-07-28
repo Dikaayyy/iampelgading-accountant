@@ -55,100 +55,76 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
         builder: (context, provider, child) {
           return Form(
             key: _formKey,
-            child: Column(
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
               children: [
-                const SizedBox(height: 24),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Old Password Field
-                          CustomTextField(
-                            label: 'Password Lama',
-                            hintText: 'Masukkan password lama',
-                            controller: _oldPasswordController,
-                            obscureText: !provider.isOldPasswordVisible,
-                            keyboardType: TextInputType.visiblePassword,
-                            validator: provider.validateOldPassword,
-                            onChanged: provider.updateOldPassword,
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                provider.isOldPasswordVisible
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                                color: AppColors.neutral[100],
-                              ),
-                              onPressed: provider.toggleOldPasswordVisibility,
-                            ),
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          // New Password Field
-                          CustomTextField(
-                            label: 'Password Baru',
-                            hintText: 'Masukkan password baru',
-                            controller: _newPasswordController,
-                            obscureText: !provider.isNewPasswordVisible,
-                            keyboardType: TextInputType.visiblePassword,
-                            validator: provider.validateNewPassword,
-                            onChanged: provider.updateNewPassword,
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                provider.isNewPasswordVisible
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                                color: AppColors.neutral[100],
-                              ),
-                              onPressed: provider.toggleNewPasswordVisibility,
-                            ),
-                          ),
-
-                          const SizedBox(height: 12),
-
-                          // Confirm Password Field
-                          CustomTextField(
-                            label: 'Konfirmasi Password Baru',
-                            hintText: 'Konfirmasi password baru',
-                            controller: _confirmPasswordController,
-                            obscureText: !provider.isConfirmPasswordVisible,
-                            keyboardType: TextInputType.visiblePassword,
-                            validator: provider.validateConfirmPassword,
-                            onChanged: provider.updateConfirmPassword,
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                provider.isConfirmPasswordVisible
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                                color: AppColors.neutral[100],
-                              ),
-                              onPressed:
-                                  provider.toggleConfirmPasswordVisibility,
-                            ),
-                          ),
-                        ],
-                      ),
+                // Old Password Field
+                CustomTextField(
+                  label: 'Password Lama',
+                  hintText: 'Masukkan password lama',
+                  controller: _oldPasswordController,
+                  obscureText: !provider.isOldPasswordVisible,
+                  keyboardType: TextInputType.visiblePassword,
+                  validator: provider.validateOldPassword,
+                  onChanged: provider.updateOldPassword,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      provider.isOldPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: AppColors.neutral[100],
                     ),
+                    onPressed: provider.toggleOldPasswordVisibility,
                   ),
                 ),
-
-                // Bottom section with button
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: PrimaryButton(
-                      text: 'Ganti Password',
-                      onPressed:
-                          provider.isFormValid && !provider.isLoading
-                              ? () => _handleChangePassword(context, provider)
-                              : null,
-                      isLoading: provider.isLoading,
+                const SizedBox(height: 12),
+                // New Password Field
+                CustomTextField(
+                  label: 'Password Baru',
+                  hintText: 'Masukkan password baru',
+                  controller: _newPasswordController,
+                  obscureText: !provider.isNewPasswordVisible,
+                  keyboardType: TextInputType.visiblePassword,
+                  validator: provider.validateNewPassword,
+                  onChanged: provider.updateNewPassword,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      provider.isNewPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: AppColors.neutral[100],
                     ),
+                    onPressed: provider.toggleNewPasswordVisibility,
                   ),
+                ),
+                const SizedBox(height: 12),
+                // Confirm Password Field
+                CustomTextField(
+                  label: 'Konfirmasi Password Baru',
+                  hintText: 'Konfirmasi password baru',
+                  controller: _confirmPasswordController,
+                  obscureText: !provider.isConfirmPasswordVisible,
+                  keyboardType: TextInputType.visiblePassword,
+                  validator: provider.validateConfirmPassword,
+                  onChanged: provider.updateConfirmPassword,
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      provider.isConfirmPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
+                      color: AppColors.neutral[100],
+                    ),
+                    onPressed: provider.toggleConfirmPasswordVisibility,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                PrimaryButton(
+                  text: 'Ganti Password',
+                  onPressed:
+                      provider.isFormValid && !provider.isLoading
+                          ? () => _handleChangePassword(context, provider)
+                          : null,
+                  isLoading: provider.isLoading,
                 ),
               ],
             ),
