@@ -70,7 +70,7 @@ class CsvExportService {
     final startStr = DateFormat('dd-MM-yyyy').format(startDate);
     final endStr = DateFormat('dd-MM-yyyy').format(endDate);
     final timestamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-    return 'transaksi_${startStr}_sampai_${endStr}_${timestamp}.csv';
+    return 'transaksi_${startStr}_sampai_${endStr}_$timestamp.csv';
   }
 
   static String _generateCsvContent(

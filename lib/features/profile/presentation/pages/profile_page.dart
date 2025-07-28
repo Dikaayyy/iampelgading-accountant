@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:iampelgading/features/profile/presentation/providers/profile_provider.dart';
 import 'package:iampelgading/features/profile/presentation/widgets/profile_header.dart';
 import 'package:iampelgading/features/profile/presentation/widgets/profile_menu_section.dart';
-import 'package:iampelgading/core/theme/app_text_styles.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});

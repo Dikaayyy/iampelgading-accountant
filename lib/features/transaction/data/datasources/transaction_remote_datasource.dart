@@ -88,23 +88,16 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
         },
       );
 
-      print('Requesting URL: $uri');
-
       final response = await client.get(uri, headers: _getHeaders());
 
       if (response.statusCode == 200) {
         final dynamic responseData = json.decode(response.body);
-        print('Response data: $responseData');
 
         if (responseData is Map<String, dynamic>) {
           final result = PaginatedTransactionResponse.fromJson(responseData);
 
           // Ensure data is sorted by date (newest first)
           result.data.sort((a, b) => b.date.compareTo(a.date));
-
-          print(
-            'Pagination info - Current: ${result.currentPage}, Total: ${result.totalPages}, HasNext: ${result.hasNextPage}, Data count: ${result.data.length}',
-          );
 
           return result;
         } else if (responseData is List) {
@@ -138,7 +131,6 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
         throw Exception('Failed to load transactions: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error in getTransactionsPaginated: $e');
       if (e.toString().contains('Unauthorized')) {
         rethrow;
       }

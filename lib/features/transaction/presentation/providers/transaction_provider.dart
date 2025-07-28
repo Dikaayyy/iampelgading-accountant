@@ -8,9 +8,7 @@ import 'package:iampelgading/features/transaction/domain/usecases/delete_transac
 import 'package:iampelgading/features/transaction/domain/entities/transaction.dart';
 import 'package:iampelgading/core/services/auth_service.dart';
 import 'package:iampelgading/core/di/service_locator.dart' as di;
-import 'package:iampelgading/features/transaction/domain/usecases/export_transactions_usecase.dart';
 import 'package:iampelgading/core/services/csv_export_service.dart';
-import 'package:iampelgading/features/transaction/data/datasources/transaction_remote_datasource.dart';
 import 'dart:async';
 
 class TransactionProvider with ChangeNotifier {
@@ -19,7 +17,6 @@ class TransactionProvider with ChangeNotifier {
   final GetTransactionsPaginated? _getTransactionsPaginated;
   final UpdateTransaction? _updateTransaction;
   final DeleteTransaction? _deleteTransaction;
-  final ExportTransactions? _exportTransactions;
 
   // Controllers
   final TextEditingController dateController = TextEditingController();
@@ -106,7 +103,6 @@ class TransactionProvider with ChangeNotifier {
     this._getTransactionsPaginated,
     this._updateTransaction,
     this._deleteTransaction,
-    this._exportTransactions,
   ]) {
     _initializeDefaultValues();
     quantityController.text = '0';
@@ -148,7 +144,6 @@ class TransactionProvider with ChangeNotifier {
 
     // Prevent multiple simultaneous refresh calls
     if (_isPaginationRefreshing && refresh) {
-      print('Pagination refresh already in progress, skipping...');
       return;
     }
 
@@ -168,16 +163,10 @@ class TransactionProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      print('Loading page $_currentPage with search: "$_searchQuery"');
-
       final response = await _getTransactionsPaginated(
         page: _currentPage,
         limit: _pageSize,
         search: _searchQuery.isEmpty ? null : _searchQuery,
-      );
-
-      print(
-        'Received ${response.data.length} transactions for page $_currentPage',
       );
 
       if (refresh) {
@@ -189,12 +178,9 @@ class TransactionProvider with ChangeNotifier {
       // Always sort by date (newest first) to ensure consistency
       _paginatedTransactions.sort((a, b) => b.date.compareTo(a.date));
 
-      print('Total transactions after sort: ${_paginatedTransactions.length}');
-
       _hasMoreTransactions = response.hasNextPage;
       _currentPage++;
     } catch (e) {
-      print('Error loading paginated transactions: $e');
       _errorMessage = e.toString();
     } finally {
       _isLoadingMoreTransactions = false;
@@ -207,7 +193,6 @@ class TransactionProvider with ChangeNotifier {
   void refreshPaginatedDataDebounced() {
     _paginationDebounceTimer?.cancel();
     _paginationDebounceTimer = Timer(const Duration(milliseconds: 300), () {
-      print('Executing debounced pagination refresh');
       loadPaginatedTransactions(refresh: true);
     });
   }
@@ -216,7 +201,6 @@ class TransactionProvider with ChangeNotifier {
   void updateSearchQuery(String query) {
     if (_searchQuery == query) return; // Prevent unnecessary updates
 
-    print('Updating search query from "$_searchQuery" to "$query"');
     _searchQuery = query;
     refreshPaginatedDataDebounced();
     notifyListeners();

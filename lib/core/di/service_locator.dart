@@ -75,7 +75,6 @@ Future<void> init() async {
       sl<GetTransactionsPaginated>(),
       sl<UpdateTransaction>(),
       sl<DeleteTransaction>(),
-      sl<ExportTransactions>(),
     ),
   );
 }

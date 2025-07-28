@@ -40,8 +40,6 @@ class TransactionModel extends Transaction {
 
   static DateTime _parseDateTime(String dateString, String timeString) {
     try {
-      print('Parsing date: "$dateString", time: "$timeString"');
-
       // Parse date from format "23-07-2025" or "2025-07-23"
       final dateParts = dateString.split('-');
       if (dateParts.length == 3) {
@@ -79,13 +77,10 @@ class TransactionModel extends Transaction {
         }
 
         final parsedDateTime = DateTime(year, month, day, hour, minute, second);
-        print('Parsed DateTime: $parsedDateTime');
 
         return parsedDateTime;
       }
-    } catch (e) {
-      print('Error parsing date/time: $e');
-    }
+    } catch (e) {}
 
     // Fallback to current date/time
     return DateTime.now();

@@ -18,8 +18,6 @@ import 'package:iampelgading/core/widgets/date_range_picker.dart';
 import 'package:iampelgading/core/widgets/custom_button.dart';
 import 'package:iampelgading/core/widgets/permission_dialog.dart';
 import 'package:iampelgading/core/services/permission_service.dart';
-import 'package:open_file/open_file.dart';
-import 'dart:io';
 import 'package:iampelgading/core/services/file_opener_service.dart';
 import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
 import 'package:iampelgading/features/transaction/domain/entities/transaction.dart';
@@ -131,10 +129,6 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
 
         // Only update if search query actually changed
         if (currentSearchQuery != providerSearchQuery) {
-          print(
-            'Search query changed from "$providerSearchQuery" to "$currentSearchQuery"',
-          );
-
           // Update provider search query (this will trigger debounced refresh)
           context.read<TransactionProvider>().updateSearchQuery(
             currentSearchQuery,
@@ -167,8 +161,6 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
       final provider = context.read<TransactionProvider>();
       final searchQuery = _searchController.text.trim();
 
-      print('Fetching page $pageKey with search: "$searchQuery"');
-
       if (searchQuery.isNotEmpty) {
         // For search: get all transactions and filter locally
         if (pageKey == 1) {
@@ -192,10 +184,6 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
             // Sort by date (newest first)
             filteredTransactions.sort((a, b) => b.date.compareTo(a.date));
 
-            print(
-              'Filtered ${filteredTransactions.length} transactions from ${allTransactions.length} total',
-            );
-
             _pagingController.appendLastPage(filteredTransactions);
           } else {
             _pagingController.appendLastPage([]);
@@ -218,11 +206,6 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
           final sortedData = List<Transaction>.from(response.data);
           sortedData.sort((a, b) => b.date.compareTo(a.date));
 
-          print(
-            'Fetched ${sortedData.length} paginated items for page $pageKey',
-          );
-          print('Is last page: $isLastPage');
-
           if (isLastPage) {
             _pagingController.appendLastPage(sortedData);
           } else {
@@ -234,7 +217,6 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
         }
       }
     } catch (error) {
-      print('Error fetching page $pageKey: $error');
       _pagingController.error = error;
     }
   }
@@ -245,19 +227,15 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
     // Prevent too frequent refreshes
     if (_lastRefreshTime != null &&
         now.difference(_lastRefreshTime!).inMilliseconds < 500) {
-      print('Skipping refresh - too frequent');
       return;
     }
 
     if (_isRefreshing) {
-      print('Already refreshing, skipping...');
       return;
     }
 
     _isRefreshing = true;
     _lastRefreshTime = now;
-
-    print('Refreshing pagination...');
 
     // Small delay to prevent race conditions
     Future.delayed(const Duration(milliseconds: 100), () {

@@ -80,7 +80,7 @@ class _LoginViewState extends State<LoginView> {
   }
 
   Widget _buildOptimizedLogo() {
-    return Container(
+    return SizedBox(
       width: 240, // Fixed size untuk mencegah rebuild
       height: 240,
       child: Image.asset(
