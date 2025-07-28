@@ -45,80 +45,61 @@ class _LoginViewState extends State<LoginView> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.base,
+      // Tambahkan ini untuk mencegah resize saat keyboard muncul
+      resizeToAvoidBottomInset: true,
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: SizedBox(
-            width: double.infinity,
-            height:
-                MediaQuery.of(context).size.height -
-                MediaQuery.of(context).padding.top,
-            child: Column(
-              children: [
-                // Top section with image and background
-                Flexible(flex: 3, child: _buildTopSection()),
-
-                // Bottom section with form
-                Flexible(flex: 2, child: _buildBottomSection()),
-              ],
-            ),
-          ),
+        child: Column(
+          children: [
+            // Top section dengan fixed height
+            Expanded(flex: 3, child: _buildTopSection()),
+            // Bottom section dengan fixed height
+            Expanded(flex: 2, child: _buildBottomSection()),
+          ],
         ),
       ),
     );
   }
 
-  // Instead of heavy transformations, use optimized assets
   Widget _buildTopSection() {
-    return Stack(
-      children: [
-        // Use a simple colored container or optimized background
-        Positioned.fill(
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [AppColors.base, AppColors.base.withOpacity(0.8)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-          ),
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.base, AppColors.base.withOpacity(0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-
-        // Simplified content
-        Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const SizedBox(height: 100),
-              // Optimized image loading
-              _buildOptimizedLogo(),
-            ],
-          ),
+      ),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 40),
+          child: _buildOptimizedLogo(),
         ),
-      ],
+      ),
     );
   }
 
   Widget _buildOptimizedLogo() {
-    return Flexible(
-      child: SizedBox(
-        width: 280,
-        height: 280,
-        child: Image.asset(
-          AppAssets.cuate,
-          fit: BoxFit.contain,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              width: 280,
-              height: 280,
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.person, size: 140, color: AppColors.base),
-            );
-          },
-        ),
+    return Container(
+      width: 240, // Fixed size untuk mencegah rebuild
+      height: 240,
+      child: Image.asset(
+        AppAssets.cuate,
+        fit: BoxFit.contain,
+        // Cache image untuk performa
+        cacheWidth: 240,
+        cacheHeight: 240,
+        errorBuilder: (context, error, stackTrace) {
+          return Container(
+            width: 240,
+            height: 240,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.person, size: 120, color: AppColors.base),
+          );
+        },
       ),
     );
   }
@@ -126,7 +107,6 @@ class _LoginViewState extends State<LoginView> {
   Widget _buildBottomSection() {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.only(top: 24, left: 24, right: 24, bottom: 24),
       decoration: const ShapeDecoration(
         color: AppColors.white,
         shape: RoundedRectangleBorder(
@@ -136,88 +116,104 @@ class _LoginViewState extends State<LoginView> {
           ),
         ),
       ),
-      child: Consumer<AuthProvider>(
-        builder: (context, provider, child) {
-          return Form(
-            key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Title
-                  Text(
-                    'Masuk',
-                    style: AppTextStyles.h1.copyWith(
-                      color: Colors.black,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: -1.50,
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Form fields
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Username field
-                      CustomTextField(
-                        label: 'Username',
-                        hintText: 'E.g admin',
-                        controller: _usernameController,
-                        keyboardType: TextInputType.text,
-                        validator: provider.validateUsername,
-                        onChanged: provider.updateUsername,
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(30),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
+          physics: const BouncingScrollPhysics(), // Animasi scroll yang smooth
+          child: Consumer<AuthProvider>(
+            builder: (context, provider, child) {
+              return Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Title
+                    Text(
+                      'Masuk',
+                      style: AppTextStyles.h1.copyWith(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: -1.50,
                       ),
-
-                      const SizedBox(height: 20),
-
-                      // Password field
-                      CustomTextField(
-                        label: 'Password',
-                        hintText: 'E.g password123',
-                        controller: _passwordController,
-                        obscureText: !provider.isPasswordVisible,
-                        keyboardType: TextInputType.visiblePassword,
-                        validator: provider.validatePassword,
-                        onChanged: provider.updatePassword,
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            provider.isPasswordVisible
-                                ? Icons.visibility
-                                : Icons.visibility_off,
-                            color: AppColors.neutral[100],
-                          ),
-                          onPressed: provider.togglePasswordVisibility,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Login button
-                  SizedBox(
-                    width: double.infinity,
-                    child: PrimaryButton(
-                      text: 'Masuk',
-                      onPressed:
-                          provider.isFormValid && !provider.isLoading
-                              ? () => _handleLogin(context, provider)
-                              : null,
-                      isLoading: provider.isLoading,
                     ),
-                  ),
 
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-          );
-        },
+                    const SizedBox(height: 24),
+
+                    // Form fields dengan optimasi
+                    _buildFormFields(provider),
+
+                    const SizedBox(height: 24),
+
+                    // Login button
+                    SizedBox(
+                      width: double.infinity,
+                      child: PrimaryButton(
+                        text: 'Masuk',
+                        onPressed:
+                            provider.isFormValid && !provider.isLoading
+                                ? () => _handleLogin(context, provider)
+                                : null,
+                        isLoading: provider.isLoading,
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
       ),
+    );
+  }
+
+  // Pisahkan form fields untuk optimasi rebuild
+  Widget _buildFormFields(AuthProvider provider) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Username field dengan optimasi
+        _OptimizedTextField(
+          label: 'Username',
+          hintText: 'E.g admin',
+          controller: _usernameController,
+          keyboardType: TextInputType.text,
+          validator: provider.validateUsername,
+          onChanged: provider.updateUsername,
+        ),
+
+        const SizedBox(height: 20),
+
+        // Password field dengan optimasi
+        Consumer<AuthProvider>(
+          builder: (context, provider, child) {
+            return _OptimizedTextField(
+              label: 'Password',
+              hintText: 'E.g password123',
+              controller: _passwordController,
+              obscureText: !provider.isPasswordVisible,
+              keyboardType: TextInputType.visiblePassword,
+              validator: provider.validatePassword,
+              onChanged: provider.updatePassword,
+              suffixIcon: IconButton(
+                icon: Icon(
+                  provider.isPasswordVisible
+                      ? Icons.visibility
+                      : Icons.visibility_off,
+                  color: AppColors.neutral[100],
+                ),
+                onPressed: provider.togglePasswordVisibility,
+              ),
+            );
+          },
+        ),
+      ],
     );
   }
 
@@ -252,5 +248,44 @@ class _LoginViewState extends State<LoginView> {
       // Show validation error snackbar
       SnackbarManager.showLoginValidationError(context: context);
     }
+  }
+}
+
+// Widget TextField yang dioptimasi untuk mengurangi rebuild
+class _OptimizedTextField extends StatelessWidget {
+  final String label;
+  final String? hintText;
+  final TextEditingController? controller;
+  final TextInputType keyboardType;
+  final bool obscureText;
+  final String? Function(String?)? validator;
+  final void Function(String)? onChanged;
+  final Widget? suffixIcon;
+
+  const _OptimizedTextField({
+    required this.label,
+    this.hintText,
+    this.controller,
+    this.keyboardType = TextInputType.text,
+    this.obscureText = false,
+    this.validator,
+    this.onChanged,
+    this.suffixIcon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: CustomTextField(
+        label: label,
+        hintText: hintText,
+        controller: controller,
+        keyboardType: keyboardType,
+        obscureText: obscureText,
+        validator: validator,
+        onChanged: onChanged,
+        suffixIcon: suffixIcon,
+      ),
+    );
   }
 }

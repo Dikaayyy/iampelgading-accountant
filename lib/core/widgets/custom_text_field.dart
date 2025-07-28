@@ -44,74 +44,79 @@ class CustomTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Label
-        Text(
-          label,
-          style: AppTextStyles.h4.copyWith(
-            color: AppColors.neutral[200],
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-
-        const SizedBox(height: 4),
-
-        // Text Field
-        TextFormField(
-          controller: controller,
-          keyboardType: keyboardType,
-          obscureText: obscureText,
-          validator: validator,
-          onChanged: onChanged,
-          maxLines: maxLines,
-          minLines: minLines,
-          readOnly: readOnly,
-          onTap: onTap,
-          focusNode: focusNode,
-          autofocus: autofocus,
-          enabled: enabled,
-          style: AppTextStyles.body.copyWith(
-            color: AppColors.neutral[200],
-            fontSize: 16,
-          ),
-          decoration: InputDecoration(
-            hintText: hintText,
-            hintStyle: AppTextStyles.body.copyWith(
-              color: AppColors.neutral[50],
+    return RepaintBoundary(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Label
+          Text(
+            label,
+            style: AppTextStyles.h4.copyWith(
+              color: AppColors.neutral[200],
               fontSize: 16,
-            ),
-            prefixIcon: prefixIcon,
-            suffixIcon: suffixIcon,
-            contentPadding: contentPadding ?? const EdgeInsets.all(14),
-            filled: true,
-            fillColor: Colors.white,
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(width: 1, color: AppColors.base),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(width: 1.5, color: AppColors.base),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            errorBorder: OutlineInputBorder(
-              borderSide: BorderSide(width: 1, color: AppColors.error[400]!),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            focusedErrorBorder: OutlineInputBorder(
-              borderSide: BorderSide(width: 1.5, color: AppColors.error[400]!),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            disabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(width: 1, color: AppColors.neutral[50]!),
-              borderRadius: BorderRadius.circular(15),
+              fontWeight: FontWeight.w500,
             ),
           ),
-        ),
-      ],
+
+          const SizedBox(height: 4),
+
+          // Text Field dengan optimasi
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            child: TextFormField(
+              controller: controller,
+              keyboardType: keyboardType,
+              obscureText: obscureText,
+              validator: validator,
+              onChanged: onChanged,
+              maxLines: maxLines,
+              minLines: minLines,
+              readOnly: readOnly,
+              onTap: onTap,
+              focusNode: focusNode,
+              autofocus: autofocus,
+              enabled: enabled,
+              // Optimasi text rendering
+              textInputAction:
+                  keyboardType == TextInputType.visiblePassword
+                      ? TextInputAction.done
+                      : TextInputAction.next,
+              style: AppTextStyles.body.copyWith(
+                color: AppColors.neutral[200],
+                fontSize: 16,
+              ),
+              decoration: InputDecoration(
+                hintText: hintText,
+                hintStyle: AppTextStyles.body.copyWith(
+                  color: AppColors.neutral[50],
+                  fontSize: 16,
+                ),
+                prefixIcon: prefixIcon,
+                suffixIcon: suffixIcon,
+                contentPadding: contentPadding ?? const EdgeInsets.all(14),
+                filled: true,
+                fillColor: Colors.white,
+                // Optimasi border dengan const
+                enabledBorder: _buildBorder(AppColors.base, 1.0),
+                focusedBorder: _buildBorder(AppColors.base, 1.5),
+                errorBorder: _buildBorder(AppColors.error[400]!, 1.0),
+                focusedErrorBorder: _buildBorder(AppColors.error[400]!, 1.5),
+                disabledBorder: _buildBorder(AppColors.neutral[50]!, 1.0),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper method untuk optimasi border
+  OutlineInputBorder _buildBorder(Color color, double width) {
+    return OutlineInputBorder(
+      borderSide: BorderSide(width: width, color: color),
+      borderRadius: BorderRadius.circular(15),
     );
   }
 }
