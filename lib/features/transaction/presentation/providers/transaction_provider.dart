@@ -79,19 +79,15 @@ class TransactionProvider with ChangeNotifier {
       _getTransactionsPaginated;
 
   // Lists
-  List<String> get paymentMethods => [
-    'Cash',
-    'Transfer Bank',
-    'E-Wallet',
-    'QRIS',
-    'Kartu Kredit',
-    'Kartu Debit',
-  ];
+  List<String> get paymentMethods => ['Cash', 'Transfer Bank', 'QRIS'];
 
   List<String> get incomeCategories => [
     'Pendapatan Tiket Wisata',
     'Pendapatan Parkir',
     'Pendapatan Camping',
+    'Pendapatan Tektok',
+    'Pendapatan Tenda',
+    'Pendapatan Jeep',
     'Pendapatan Lain-lain',
   ];
 
@@ -157,7 +153,7 @@ class TransactionProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final response = await _getTransactionsPaginated!(
+      final response = await _getTransactionsPaginated(
         page: _currentPage,
         limit: _pageSize,
         search: _searchQuery, // Pastikan query digunakan

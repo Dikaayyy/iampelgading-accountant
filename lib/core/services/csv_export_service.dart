@@ -80,8 +80,10 @@ class CsvExportService {
   ) {
     final buffer = StringBuffer();
 
-    // Add header dengan format baru
-    buffer.writeln('Tanggal,Transaksi,Pemasukan,Pengeluaran,Saldo');
+    // Tambahkan kolom Metode Pembayaran pada header
+    buffer.writeln(
+      'Tanggal,Transaksi,Metode Pembayaran,Pemasukan,Pengeluaran,Saldo',
+    );
 
     // Sort transactions by date to calculate running balance
     final sortedTransactions = List<Transaction>.from(transactions);
@@ -89,27 +91,42 @@ class CsvExportService {
 
     // Calculate running balance
     double runningBalance = 0.0;
+    final currencyFormat = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp. ',
+      decimalDigits: 0,
+    );
 
     // Add data rows
     for (final transaction in sortedTransactions) {
       final date = DateFormat('dd/MM/yyyy').format(transaction.date);
       final transaksi = _escapeCsvValue(transaction.category);
 
-      // Determine pemasukan/pengeluaran values
+      // Determine pemasukan/pengeluaran values with currency format
       final pemasukan =
           transaction.isIncome
-              ? transaction.amount.abs().toStringAsFixed(0)
+              ? currencyFormat.format(transaction.amount.abs())
               : '';
       final pengeluaran =
           !transaction.isIncome
-              ? transaction.amount.abs().toStringAsFixed(0)
+              ? currencyFormat.format(transaction.amount.abs())
               : '';
 
       // Update running balance
       runningBalance += transaction.amount;
-      final saldo = runningBalance.toStringAsFixed(0);
+      final saldo = currencyFormat.format(runningBalance);
 
-      final row = [date, transaksi, pemasukan, pengeluaran, saldo].join(',');
+      // Ambil metode pembayaran, default ke 'Cash' jika null
+      final metodePembayaran = _escapeCsvValue(transaction.paymentMethod);
+
+      final row = [
+        date,
+        transaksi,
+        metodePembayaran,
+        pemasukan,
+        pengeluaran,
+        saldo,
+      ].join(',');
 
       buffer.writeln(row);
     }
