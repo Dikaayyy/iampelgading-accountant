@@ -44,7 +44,7 @@ class DateTimePicker extends StatelessWidget {
       context: context,
       initialDate: provider.selectedDate,
       firstDate: DateTime(2020),
-      lastDate: DateTime(2030),
+      lastDate: DateTime.now(),
     );
 
     if (pickedDate != null) {
