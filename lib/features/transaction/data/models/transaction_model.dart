@@ -40,67 +40,54 @@ class TransactionModel extends Transaction {
 
   static DateTime _parseDateTime(String dateString, String timeString) {
     try {
-      // Debug logging
+      print('Parsing date: "$dateString", time: "$timeString"');
 
-      // Parse date from format "18-07-2025" or "2025-07-18"
+      // Parse date from format "23-07-2025" or "2025-07-23"
       final dateParts = dateString.split('-');
       if (dateParts.length == 3) {
         int day, month, year;
 
-        // Handle both formats: "18-07-2025" and "2025-07-18"
+        // Handle both formats: "23-07-2025" and "2025-07-23"
         if (dateParts[0].length == 4) {
-          // Format: "2025-07-18"
+          // Format: "2025-07-23"
           year = int.parse(dateParts[0]);
           month = int.parse(dateParts[1]);
           day = int.parse(dateParts[2]);
         } else {
-          // Format: "18-07-2025"
+          // Format: "23-07-2025"
           day = int.parse(dateParts[0]);
           month = int.parse(dateParts[1]);
           year = int.parse(dateParts[2]);
         }
 
-        // Handle time parsing
-        if (timeString.isNotEmpty && timeString != 'null') {
-          try {
-            // If timeString is in full datetime format "YYYY-MM-DD HH:MM:SS"
-            if (timeString.contains(' ')) {
-              final timeDate = DateTime.parse(timeString);
-              final result = DateTime(
-                year,
-                month,
-                day,
-                timeDate.hour,
-                timeDate.minute,
-                timeDate.second,
-              );
-              return result;
-            }
-            // If timeString is just time "HH:MM:SS" or "HH:MM"
-            else if (timeString.contains(':')) {
-              final timeParts = timeString.split(':');
-              if (timeParts.length >= 2) {
-                final hour = int.tryParse(timeParts[0]) ?? 0;
-                final minute = int.tryParse(timeParts[1]) ?? 0;
-                final second =
-                    timeParts.length > 2
-                        ? (int.tryParse(timeParts[2]) ?? 0)
-                        : 0;
+        // Parse time if provided
+        int hour = 0;
+        int minute = 0;
+        int second = 0;
 
-                final result = DateTime(year, month, day, hour, minute, second);
-                return result;
-              }
-            }
-          } catch (e) {}
+        if (timeString.isNotEmpty && timeString != 'null') {
+          final timeParts = timeString.split(':');
+          if (timeParts.isNotEmpty) {
+            hour = int.tryParse(timeParts[0]) ?? 0;
+          }
+          if (timeParts.length > 1) {
+            minute = int.tryParse(timeParts[1]) ?? 0;
+          }
+          if (timeParts.length > 2) {
+            second = int.tryParse(timeParts[2]) ?? 0;
+          }
         }
 
-        // If no valid time provided, use midnight (00:00:00) instead of current time
-        final result = DateTime(year, month, day, 0, 0, 0);
-        return result;
-      }
-    } catch (e) {}
+        final parsedDateTime = DateTime(year, month, day, hour, minute, second);
+        print('Parsed DateTime: $parsedDateTime');
 
-    // Fallback to current datetime only if everything fails
+        return parsedDateTime;
+      }
+    } catch (e) {
+      print('Error parsing date/time: $e');
+    }
+
+    // Fallback to current date/time
     return DateTime.now();
   }
 

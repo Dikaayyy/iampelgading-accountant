@@ -54,6 +54,10 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
   // Static page size
   static const int _pageSize = 10;
 
+  // Add refresh state fields
+  bool _isRefreshing = false;
+  DateTime? _lastRefreshTime;
+
   @override
   bool get wantKeepAlive => true;
 
@@ -83,6 +87,10 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
 
   @override
   void dispose() {
+    // Clean up properly
+    final provider = context.read<TransactionProvider>();
+    provider.removeListener(_onProviderChanged);
+
     // Hapus listener agar tidak memory leak
     context.read<TransactionProvider>().removeListener(_onProviderChanged);
     _searchController.dispose();
@@ -114,8 +122,8 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
     // Cancel previous timer
     _searchDebounce?.cancel();
 
-    // Set new timer with 500ms delay
-    _searchDebounce = Timer(const Duration(milliseconds: 500), () {
+    // Set new timer with longer delay to prevent excessive calls
+    _searchDebounce = Timer(const Duration(milliseconds: 800), () {
       if (mounted) {
         final currentSearchQuery = _searchController.text.trim();
         final providerSearchQuery =
@@ -127,13 +135,17 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
             'Search query changed from "$providerSearchQuery" to "$currentSearchQuery"',
           );
 
-          // Update provider search query
+          // Update provider search query (this will trigger debounced refresh)
           context.read<TransactionProvider>().updateSearchQuery(
             currentSearchQuery,
           );
 
-          // Reset and refresh pagination
-          _refreshPagination();
+          // Reset pagination controller after a short delay
+          Future.delayed(const Duration(milliseconds: 100), () {
+            if (mounted) {
+              _refreshPagination();
+            }
+          });
         }
       }
     });
@@ -160,11 +172,10 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
       if (searchQuery.isNotEmpty) {
         // For search: get all transactions and filter locally
         if (pageKey == 1) {
-          // Only fetch on first page for search
           final allTransactions = await provider.getTransactions?.call();
 
           if (allTransactions != null) {
-            // Filter transactions by search query
+            // Filter and sort transactions
             final filteredTransactions =
                 allTransactions.where((transaction) {
                   return transaction.title.toLowerCase().contains(
@@ -172,20 +183,24 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
                       ) ||
                       transaction.description.toLowerCase().contains(
                         searchQuery.toLowerCase(),
+                      ) ||
+                      transaction.category.toLowerCase().contains(
+                        searchQuery.toLowerCase(),
                       );
                 }).toList();
+
+            // Sort by date (newest first)
+            filteredTransactions.sort((a, b) => b.date.compareTo(a.date));
 
             print(
               'Filtered ${filteredTransactions.length} transactions from ${allTransactions.length} total',
             );
 
-            // For search results, show all filtered results at once
             _pagingController.appendLastPage(filteredTransactions);
           } else {
             _pagingController.appendLastPage([]);
           }
         } else {
-          // For search, we don't have additional pages since we load all at once
           _pagingController.appendLastPage([]);
         }
       } else {
@@ -193,34 +208,74 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
         final response = await provider.getTransactionsPaginated?.call(
           page: pageKey,
           limit: _pageSize,
-          search: null, // No search parameter
+          search: null,
         );
 
         if (response != null) {
           final isLastPage = !response.hasNextPage;
 
-          print('Fetched ${response.data.length} paginated items');
+          // Sort the response data by date (newest first)
+          final sortedData = List<Transaction>.from(response.data);
+          sortedData.sort((a, b) => b.date.compareTo(a.date));
+
+          print(
+            'Fetched ${sortedData.length} paginated items for page $pageKey',
+          );
           print('Is last page: $isLastPage');
 
           if (isLastPage) {
-            _pagingController.appendLastPage(response.data);
+            _pagingController.appendLastPage(sortedData);
           } else {
             final nextPageKey = pageKey + 1;
-            _pagingController.appendPage(response.data, nextPageKey);
+            _pagingController.appendPage(sortedData, nextPageKey);
           }
         } else {
           _pagingController.appendLastPage([]);
         }
       }
     } catch (error) {
-      print('Error fetching page: $error');
+      print('Error fetching page $pageKey: $error');
       _pagingController.error = error;
     }
   }
 
   void _refreshPagination() {
+    final now = DateTime.now();
+
+    // Prevent too frequent refreshes
+    if (_lastRefreshTime != null &&
+        now.difference(_lastRefreshTime!).inMilliseconds < 500) {
+      print('Skipping refresh - too frequent');
+      return;
+    }
+
+    if (_isRefreshing) {
+      print('Already refreshing, skipping...');
+      return;
+    }
+
+    _isRefreshing = true;
+    _lastRefreshTime = now;
+
     print('Refreshing pagination...');
-    _pagingController.refresh();
+
+    // Small delay to prevent race conditions
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) {
+        _pagingController.refresh();
+        _isRefreshing = false;
+      }
+    });
+  }
+
+  // Update the provider changed listener to use debounced refresh
+  void _onProviderChanged() {
+    // Use debounced refresh instead of immediate refresh
+    Future.delayed(const Duration(milliseconds: 200), () {
+      if (mounted && !_isRefreshing) {
+        _refreshPagination();
+      }
+    });
   }
 
   @override
@@ -973,11 +1028,5 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
         ],
       ),
     );
-  }
-
-  // Tambahkan fungsi listener
-  void _onProviderChanged() {
-    // Hanya refresh paginated list, bukan loadTransactions
-    _refreshPagination();
   }
 }

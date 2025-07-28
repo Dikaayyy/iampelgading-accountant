@@ -11,6 +11,7 @@ import 'package:iampelgading/core/di/service_locator.dart' as di;
 import 'package:iampelgading/features/transaction/domain/usecases/export_transactions_usecase.dart';
 import 'package:iampelgading/core/services/csv_export_service.dart';
 import 'package:iampelgading/features/transaction/data/datasources/transaction_remote_datasource.dart';
+import 'dart:async';
 
 class TransactionProvider with ChangeNotifier {
   final AddTransaction? _addTransaction;
@@ -137,26 +138,46 @@ class TransactionProvider with ChangeNotifier {
     }
   }
 
+  // Add debounce timer for pagination
+  Timer? _paginationDebounceTimer;
+  bool _isPaginationRefreshing = false;
+
   // Load paginated transactions for display
   Future<void> loadPaginatedTransactions({bool refresh = true}) async {
     if (_getTransactionsPaginated == null) return;
 
+    // Prevent multiple simultaneous refresh calls
+    if (_isPaginationRefreshing && refresh) {
+      print('Pagination refresh already in progress, skipping...');
+      return;
+    }
+
     if (refresh) {
+      _isPaginationRefreshing = true;
       _currentPage = 1;
       _paginatedTransactions.clear();
       _hasMoreTransactions = true;
     }
 
-    if (!_hasMoreTransactions || _isLoadingMoreTransactions) return;
+    if (!_hasMoreTransactions || _isLoadingMoreTransactions) {
+      _isPaginationRefreshing = false;
+      return;
+    }
 
     _isLoadingMoreTransactions = true;
     notifyListeners();
 
     try {
+      print('Loading page $_currentPage with search: "$_searchQuery"');
+
       final response = await _getTransactionsPaginated(
         page: _currentPage,
         limit: _pageSize,
-        search: _searchQuery, // Pastikan query digunakan
+        search: _searchQuery.isEmpty ? null : _searchQuery,
+      );
+
+      print(
+        'Received ${response.data.length} transactions for page $_currentPage',
       );
 
       if (refresh) {
@@ -164,17 +185,41 @@ class TransactionProvider with ChangeNotifier {
       } else {
         _paginatedTransactions.addAll(response.data);
       }
-      // Tambahkan sort agar data selalu urut terbaru
+
+      // Always sort by date (newest first) to ensure consistency
       _paginatedTransactions.sort((a, b) => b.date.compareTo(a.date));
+
+      print('Total transactions after sort: ${_paginatedTransactions.length}');
 
       _hasMoreTransactions = response.hasNextPage;
       _currentPage++;
     } catch (e) {
+      print('Error loading paginated transactions: $e');
       _errorMessage = e.toString();
     } finally {
       _isLoadingMoreTransactions = false;
+      _isPaginationRefreshing = false;
       notifyListeners();
     }
+  }
+
+  // Debounced refresh method
+  void refreshPaginatedDataDebounced() {
+    _paginationDebounceTimer?.cancel();
+    _paginationDebounceTimer = Timer(const Duration(milliseconds: 300), () {
+      print('Executing debounced pagination refresh');
+      loadPaginatedTransactions(refresh: true);
+    });
+  }
+
+  // Update search method to use debounced refresh
+  void updateSearchQuery(String query) {
+    if (_searchQuery == query) return; // Prevent unnecessary updates
+
+    print('Updating search query from "$_searchQuery" to "$query"');
+    _searchQuery = query;
+    refreshPaginatedDataDebounced();
+    notifyListeners();
   }
 
   // Handle unauthorized access
@@ -199,13 +244,6 @@ class TransactionProvider with ChangeNotifier {
   // Clear error message
   void clearError() {
     _errorMessage = null;
-    notifyListeners();
-  }
-
-  // Search functionality
-  void updateSearchQuery(String query) {
-    _searchQuery = query;
-    loadPaginatedTransactions(refresh: true);
     notifyListeners();
   }
 
@@ -797,6 +835,18 @@ class TransactionProvider with ChangeNotifier {
   // Add this method to refresh pagination from external calls
   void refreshPaginatedData() {
     loadPaginatedTransactions(refresh: true);
+  }
+
+  @override
+  void dispose() {
+    _paginationDebounceTimer?.cancel();
+    dateController.dispose();
+    timeController.dispose();
+    quantityController.dispose();
+    priceController.dispose();
+    descriptionController.dispose();
+    categoryController.dispose();
+    super.dispose();
   }
 }
 

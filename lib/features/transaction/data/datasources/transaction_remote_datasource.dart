@@ -83,30 +83,31 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
         queryParameters: {
           'page': page.toString(),
           'limit': limit.toString(),
+          'sort': 'date_desc', // Add sorting parameter
           if (search != null && search.isNotEmpty) 'search': search,
         },
       );
 
-      print('Requesting URL: $uri'); // Debug log
+      print('Requesting URL: $uri');
 
       final response = await client.get(uri, headers: _getHeaders());
 
       if (response.statusCode == 200) {
         final dynamic responseData = json.decode(response.body);
-
-        print('Response data: $responseData'); // Debug log
+        print('Response data: $responseData');
 
         if (responseData is Map<String, dynamic>) {
           final result = PaginatedTransactionResponse.fromJson(responseData);
 
-          // Debug log pagination info
+          // Ensure data is sorted by date (newest first)
+          result.data.sort((a, b) => b.date.compareTo(a.date));
+
           print(
             'Pagination info - Current: ${result.currentPage}, Total: ${result.totalPages}, HasNext: ${result.hasNextPage}, Data count: ${result.data.length}',
           );
 
           return result;
         } else if (responseData is List) {
-          // Fallback for non-paginated response
           final transactions =
               responseData
                   .map(
@@ -114,6 +115,9 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
                         TransactionModel.fromJson(json as Map<String, dynamic>),
                   )
                   .toList();
+
+          // Sort transactions by date (newest first)
+          transactions.sort((a, b) => b.date.compareTo(a.date));
 
           return PaginatedTransactionResponse(
             data: transactions,
@@ -134,7 +138,7 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
         throw Exception('Failed to load transactions: ${response.statusCode}');
       }
     } catch (e) {
-      print('Error in getTransactionsPaginated: $e'); // Debug log
+      print('Error in getTransactionsPaginated: $e');
       if (e.toString().contains('Unauthorized')) {
         rethrow;
       }
