@@ -32,13 +32,13 @@ class _AppNavigationState extends State<AppNavigation>
 
     // Start periodic token validation
     _startTokenCheck();
-    WidgetsBinding.instance.addObserver(this); // Add observer
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
     _tokenCheckTimer?.cancel();
-    WidgetsBinding.instance.removeObserver(this); // Remove observer
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -47,7 +47,7 @@ class _AppNavigationState extends State<AppNavigation>
     if (state == AppLifecycleState.resumed) {
       // Cek token setiap kali app di-resume
       final authService = di.sl<AuthService>();
-      final isValid = authService.isTokenValid();
+      final isValid = await authService.isTokenValid();
       if (!isValid) {
         await authService.logout();
         if (mounted) {
@@ -61,10 +61,18 @@ class _AppNavigationState extends State<AppNavigation>
   }
 
   void _startTokenCheck() {
-    // Check token every 5 minutes
-    _tokenCheckTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
-      AuthInterceptor.checkTokenValidity();
-      AuthInterceptor.checkTokenExpirationWarning();
+    _tokenCheckTimer = Timer.periodic(const Duration(seconds: 30), (
+      timer,
+    ) async {
+      final isValid = await di.sl<AuthService>().isTokenValid();
+      if (!isValid) {
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LoginPage()),
+            (route) => false,
+          );
+        }
+      }
     });
   }
 
@@ -74,8 +82,6 @@ class _AppNavigationState extends State<AppNavigation>
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
-
-        // Handle back button press - show exit confirmation
         _onWillPop();
       },
       child: ChangeNotifierProvider.value(

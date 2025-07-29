@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:iampelgading/core/storage/auth_local_storage.dart';
+import 'package:iampelgading/features/auth/presentation/pages/login_page.dart';
 import 'package:iampelgading/features/transaction/domain/usecases/get_transactions_paginaed_usecase.dart';
 import 'package:iampelgading/features/transaction/domain/usecases/get_transactions_usecase.dart';
 import 'package:intl/intl.dart';
@@ -10,6 +12,7 @@ import 'package:iampelgading/core/services/auth_service.dart';
 import 'package:iampelgading/core/di/service_locator.dart' as di;
 import 'package:iampelgading/core/services/csv_export_service.dart';
 import 'dart:async';
+import 'package:iampelgading/main.dart'; // pastikan import navigatorKey
 
 class TransactionProvider with ChangeNotifier {
   final AddTransaction? _addTransaction;
@@ -208,12 +211,14 @@ class TransactionProvider with ChangeNotifier {
 
   // Handle unauthorized access
   Future<void> _handleUnauthorized() async {
-    try {
-      final authService = di.sl<AuthService>();
-      await authService.logout();
-      // Navigate to login page would be handled by the UI
-    } catch (e) {
-      // Handle logout error
+    await AuthLocalStorage.clearAuthData();
+
+    // Redirect ke login page jika token expired
+    if (navigatorKey.currentState != null) {
+      navigatorKey.currentState!.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginPage()),
+        (route) => false,
+      );
     }
   }
 

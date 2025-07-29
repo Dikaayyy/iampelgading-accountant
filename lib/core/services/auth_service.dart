@@ -1,67 +1,48 @@
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:iampelgading/core/storage/auth_local_storage.dart';
 
 class AuthService {
-  final SharedPreferences _prefs;
-
-  static const String _tokenKey = 'auth_token';
-  static const String _userDataKey = 'user_data';
-  static const String _loginTimestampKey = 'login_timestamp';
-
-  AuthService(this._prefs);
+  AuthService();
 
   // Token management
   Future<void> saveToken(String token) async {
-    await _prefs.setString(_tokenKey, token);
-    // Save current timestamp when token is saved
-    await _prefs.setInt(
-      _loginTimestampKey,
-      DateTime.now().millisecondsSinceEpoch,
-    );
+    await AuthLocalStorage.saveAuthToken(token);
   }
 
-  String? getToken() {
-    return _prefs.getString(_tokenKey);
+  Future<String?> getToken() async {
+    return await AuthLocalStorage.getAuthToken();
   }
 
   Future<void> removeToken() async {
-    await _prefs.remove(_tokenKey);
-    await _prefs.remove(_loginTimestampKey);
+    await AuthLocalStorage.clearAuthData();
   }
 
   // User data management
   Future<void> saveUserData(String userData) async {
-    await _prefs.setString(_userDataKey, userData);
+    await AuthLocalStorage.saveUserData(userData);
   }
 
   Future<String?> getUserData() async {
-    return _prefs.getString(_userDataKey);
+    return await AuthLocalStorage.getUserData();
   }
 
   Future<void> removeUserData() async {
-    await _prefs.remove(_userDataKey);
+    await AuthLocalStorage.clearAuthData();
   }
 
-  // Check if token is still valid (24 hours)
-  bool isTokenValid() {
-    final token = getToken();
-    if (token == null) return false;
-
-    final loginTimestamp = _prefs.getInt(_loginTimestampKey);
-    if (loginTimestamp == null) return false;
-
-    final loginTime = DateTime.fromMillisecondsSinceEpoch(loginTimestamp);
-    final now = DateTime.now();
-    final difference = now.difference(loginTime);
-
-    // Token valid for 24 hours
-    return difference.inHours < 24;
+  // Check if token is still valid (3 hours)
+  Future<bool> isTokenValid() async {
+    final isValid = await AuthLocalStorage.isTokenStillValid();
+    if (!isValid) {
+      await logout();
+    }
+    return isValid;
   }
 
   // Auth state
   Future<bool> isLoggedIn() async {
-    final token = getToken();
+    final token = await getToken();
     final userData = await getUserData();
-    final isValid = isTokenValid();
+    final isValid = await isTokenValid();
 
     if (token != null && userData != null && isValid) {
       return true;
@@ -75,23 +56,11 @@ class AuthService {
   }
 
   Future<void> logout() async {
-    await removeToken();
-    await removeUserData();
+    await AuthLocalStorage.clearAuthData();
   }
 
   // Get remaining time until token expires
-  Duration? getTokenRemainingTime() {
-    final loginTimestamp = _prefs.getInt(_loginTimestampKey);
-    if (loginTimestamp == null) return null;
-
-    final loginTime = DateTime.fromMillisecondsSinceEpoch(loginTimestamp);
-    final expiryTime = loginTime.add(const Duration(hours: 24));
-    final now = DateTime.now();
-
-    if (now.isAfter(expiryTime)) {
-      return null; // Token expired
-    }
-
-    return expiryTime.difference(now);
+  Future<Duration?> getTokenRemainingTime() async {
+    return await AuthLocalStorage.getTokenRemainingTime();
   }
 }

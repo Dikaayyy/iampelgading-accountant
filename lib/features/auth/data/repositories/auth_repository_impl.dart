@@ -59,7 +59,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<User?> getCurrentUser() async {
     try {
       // Check if token is still valid
-      if (!authService.isTokenValid()) {
+      if (!(await authService.isTokenValid())) {
         await authService.logout();
         return null;
       }

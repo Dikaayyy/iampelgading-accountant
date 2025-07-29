@@ -14,7 +14,7 @@ class AuthInterceptor {
   static Future<bool> checkTokenValidity() async {
     if (_authService == null) return false;
 
-    final isValid = _authService!.isTokenValid();
+    final isValid = await _authService!.isTokenValid();
     if (!isValid) {
       await _handleTokenExpired();
       return false;
@@ -45,10 +45,10 @@ class AuthInterceptor {
   }
 
   // Method untuk cek remaining time dan warning user
-  static void checkTokenExpirationWarning() {
+  static Future<void> checkTokenExpirationWarning() async {
     if (_authService == null) return;
 
-    final remainingTime = _authService!.getTokenRemainingTime();
+    final remainingTime = await _authService!.getTokenRemainingTime();
     if (remainingTime == null) return;
 
     // Warning ketika tinggal 30 menit

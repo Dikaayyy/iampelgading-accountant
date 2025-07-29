@@ -1,7 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:http/http.dart' as http;
 import 'package:iampelgading/features/transaction/domain/usecases/get_transactions_paginaed_usecase.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 // Auth
 import 'package:iampelgading/features/auth/data/datasources/auth_remote_datasource.dart';
@@ -29,12 +28,10 @@ final sl = GetIt.instance;
 
 Future<void> init() async {
   // External dependencies
-  final sharedPreferences = await SharedPreferences.getInstance();
-  sl.registerLazySingleton(() => sharedPreferences);
   sl.registerLazySingleton(() => http.Client());
 
-  // Core services
-  sl.registerLazySingleton<AuthService>(() => AuthService(sl()));
+  // Core services - Updated to use new AuthService without SharedPreferences dependency
+  sl.registerLazySingleton<AuthService>(() => AuthService());
 
   // Initialize auth interceptor
   AuthInterceptor.init(sl<AuthService>());

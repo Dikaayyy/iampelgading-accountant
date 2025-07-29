@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iampelgading/core/colors/app_colors.dart';
+import 'package:iampelgading/core/storage/auth_local_storage.dart';
 import 'package:iampelgading/core/widgets/custom_button.dart';
 import 'package:iampelgading/core/widgets/custom_snackbar.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
@@ -112,7 +113,10 @@ class ProfileMenuSection extends StatelessWidget {
     );
   }
 
-  void _performLogout(BuildContext context) {
+  void _performLogout(BuildContext context) async {
+    // Clear auth data using AuthLocalStorage
+    await AuthLocalStorage.clearAuthData();
+
     // Show logout success message with custom snackbar
     CustomSnackbar.showSuccess(
       context: context,

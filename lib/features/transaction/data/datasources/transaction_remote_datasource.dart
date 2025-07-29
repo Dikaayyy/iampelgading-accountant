@@ -64,12 +64,59 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
     required this.authService,
   });
 
-  Map<String, String> _getHeaders() {
-    final token = authService.getToken();
+  Future<Map<String, String>> _getHeaders() async {
+    final token = await authService.getToken();
     return {
       'Content-Type': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
+  }
+
+  @override
+  Future<List<TransactionModel>> getTransactions() async {
+    final headers = await _getHeaders();
+    final response = await client.get(
+      Uri.parse('$baseUrl/transactions'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final dynamic responseData = json.decode(response.body);
+
+      // Handle different response formats
+      List<dynamic> jsonList;
+
+      if (responseData is List) {
+        // Direct list response
+        jsonList = responseData;
+      } else if (responseData is Map<String, dynamic>) {
+        // Object response - check for common list property names
+        if (responseData.containsKey('data')) {
+          jsonList = responseData['data'] as List<dynamic>;
+        } else if (responseData.containsKey('transactions')) {
+          jsonList = responseData['transactions'] as List<dynamic>;
+        } else if (responseData.containsKey('items')) {
+          jsonList = responseData['items'] as List<dynamic>;
+        } else {
+          // If it's a single object, wrap it in a list
+          jsonList = [responseData];
+        }
+      } else {
+        throw Exception(
+          'Unexpected response format: ${responseData.runtimeType}',
+        );
+      }
+
+      return jsonList
+          .map(
+            (json) => TransactionModel.fromJson(json as Map<String, dynamic>),
+          )
+          .toList();
+    } else if (response.statusCode == 401 || response.statusCode == 403) {
+      throw Exception('Unauthorized: Please login again');
+    } else {
+      throw Exception('Failed to load transactions: ${response.statusCode}');
+    }
   }
 
   @override
@@ -78,144 +125,77 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
     int limit = 10,
     String? search,
   }) async {
-    try {
-      final uri = Uri.parse('$baseUrl/transactions').replace(
-        queryParameters: {
-          'page': page.toString(),
-          'limit': limit.toString(),
-          'sort': 'date_desc', // Add sorting parameter
-          if (search != null && search.isNotEmpty) 'search': search,
-        },
-      );
+    final headers = await _getHeaders();
+    final uri = Uri.parse('$baseUrl/transactions').replace(
+      queryParameters: {
+        'page': page.toString(),
+        'limit': limit.toString(),
+        'sort': 'date_desc',
+        if (search != null && search.isNotEmpty) 'search': search,
+      },
+    );
+    final response = await client.get(uri, headers: headers);
 
-      final response = await client.get(uri, headers: _getHeaders());
+    if (response.statusCode == 200) {
+      final dynamic responseData = json.decode(response.body);
 
-      if (response.statusCode == 200) {
-        final dynamic responseData = json.decode(response.body);
+      if (responseData is Map<String, dynamic>) {
+        final result = PaginatedTransactionResponse.fromJson(responseData);
 
-        if (responseData is Map<String, dynamic>) {
-          final result = PaginatedTransactionResponse.fromJson(responseData);
+        // Ensure data is sorted by date (newest first)
+        result.data.sort((a, b) => b.date.compareTo(a.date));
 
-          // Ensure data is sorted by date (newest first)
-          result.data.sort((a, b) => b.date.compareTo(a.date));
+        return result;
+      } else if (responseData is List) {
+        final transactions =
+            responseData
+                .map(
+                  (json) =>
+                      TransactionModel.fromJson(json as Map<String, dynamic>),
+                )
+                .toList();
 
-          return result;
-        } else if (responseData is List) {
-          final transactions =
-              responseData
-                  .map(
-                    (json) =>
-                        TransactionModel.fromJson(json as Map<String, dynamic>),
-                  )
-                  .toList();
+        // Sort transactions by date (newest first)
+        transactions.sort((a, b) => b.date.compareTo(a.date));
 
-          // Sort transactions by date (newest first)
-          transactions.sort((a, b) => b.date.compareTo(a.date));
-
-          return PaginatedTransactionResponse(
-            data: transactions,
-            totalItems: transactions.length,
-            totalPages: 1,
-            currentPage: 1,
-            hasNextPage: false,
-            hasPrevPage: false,
-          );
-        } else {
-          throw Exception(
-            'Unexpected response format: ${responseData.runtimeType}',
-          );
-        }
-      } else if (response.statusCode == 401 || response.statusCode == 403) {
-        throw Exception('Unauthorized: Please login again');
+        return PaginatedTransactionResponse(
+          data: transactions,
+          totalItems: transactions.length,
+          totalPages: 1,
+          currentPage: 1,
+          hasNextPage: false,
+          hasPrevPage: false,
+        );
       } else {
-        throw Exception('Failed to load transactions: ${response.statusCode}');
+        throw Exception(
+          'Unexpected response format: ${responseData.runtimeType}',
+        );
       }
-    } catch (e) {
-      if (e.toString().contains('Unauthorized')) {
-        rethrow;
-      }
-      throw Exception('Network error: $e');
-    }
-  }
-
-  @override
-  Future<List<TransactionModel>> getTransactions() async {
-    try {
-      final response = await client.get(
-        Uri.parse('$baseUrl/transactions'),
-        headers: _getHeaders(),
-      );
-
-      if (response.statusCode == 200) {
-        final dynamic responseData = json.decode(response.body);
-
-        // Handle different response formats
-        List<dynamic> jsonList;
-
-        if (responseData is List) {
-          // Direct list response
-          jsonList = responseData;
-        } else if (responseData is Map<String, dynamic>) {
-          // Object response - check for common list property names
-          if (responseData.containsKey('data')) {
-            jsonList = responseData['data'] as List<dynamic>;
-          } else if (responseData.containsKey('transactions')) {
-            jsonList = responseData['transactions'] as List<dynamic>;
-          } else if (responseData.containsKey('items')) {
-            jsonList = responseData['items'] as List<dynamic>;
-          } else {
-            // If it's a single object, wrap it in a list
-            jsonList = [responseData];
-          }
-        } else {
-          throw Exception(
-            'Unexpected response format: ${responseData.runtimeType}',
-          );
-        }
-
-        return jsonList
-            .map(
-              (json) => TransactionModel.fromJson(json as Map<String, dynamic>),
-            )
-            .toList();
-      } else if (response.statusCode == 401 || response.statusCode == 403) {
-        throw Exception('Unauthorized: Please login again');
-      } else {
-        throw Exception('Failed to load transactions: ${response.statusCode}');
-      }
-    } catch (e) {
-      if (e.toString().contains('Unauthorized')) {
-        rethrow;
-      }
-      throw Exception('Network error: $e');
+    } else if (response.statusCode == 401 || response.statusCode == 403) {
+      throw Exception('Unauthorized: Please login again');
+    } else {
+      throw Exception('Failed to load transactions: ${response.statusCode}');
     }
   }
 
   @override
   Future<TransactionModel> addTransaction(TransactionModel transaction) async {
-    try {
-      final requestBody = transaction.toJson();
+    final headers = await _getHeaders();
+    final requestBody = transaction.toJson();
+    final response = await client.post(
+      Uri.parse('$baseUrl/transactions'),
+      headers: headers,
+      body: json.encode(requestBody),
+    );
 
-      final response = await client.post(
-        Uri.parse('$baseUrl/transactions'),
-        headers: _getHeaders(),
-        body: json.encode(requestBody),
-      );
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        // Parse response to get the created transaction
-        final responseData = json.decode(response.body);
-        return TransactionModel.fromJson(responseData);
-      } else if (response.statusCode == 401 || response.statusCode == 403) {
-        throw Exception('Unauthorized: Please login again');
-      } else {
-        throw Exception('Failed to add transaction: ${response.statusCode}');
-      }
-    } catch (e) {
-      if (e.toString().contains('Unauthorized')) {
-        rethrow;
-      }
-      throw Exception('Network error: $e');
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      // Parse response to get the created transaction
+      final responseData = json.decode(response.body);
+      return TransactionModel.fromJson(responseData);
+    } else if (response.statusCode == 401 || response.statusCode == 403) {
+      throw Exception('Unauthorized: Please login again');
+    } else {
+      throw Exception('Failed to add transaction: ${response.statusCode}');
     }
   }
 
@@ -223,52 +203,39 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
   Future<TransactionModel> updateTransaction(
     TransactionModel transaction,
   ) async {
-    try {
-      final requestBody = transaction.toJson();
+    final headers = await _getHeaders();
+    final requestBody = transaction.toJson();
+    final response = await client.put(
+      Uri.parse('$baseUrl/transactions/${transaction.id}'),
+      headers: headers,
+      body: json.encode(requestBody),
+    );
 
-      final response = await client.put(
-        Uri.parse('$baseUrl/transactions/${transaction.id}'),
-        headers: _getHeaders(),
-        body: json.encode(requestBody),
-      );
-
-      if (response.statusCode == 200) {
-        // Parse response to get the updated transaction
-        final responseData = json.decode(response.body);
-        return TransactionModel.fromJson(responseData);
-      } else if (response.statusCode == 401 || response.statusCode == 403) {
-        throw Exception('Unauthorized: Please login again');
-      } else {
-        throw Exception('Failed to update transaction: ${response.statusCode}');
-      }
-    } catch (e) {
-      if (e.toString().contains('Unauthorized')) {
-        rethrow;
-      }
-      throw Exception('Network error: $e');
+    if (response.statusCode == 200) {
+      // Parse response to get the updated transaction
+      final responseData = json.decode(response.body);
+      return TransactionModel.fromJson(responseData);
+    } else if (response.statusCode == 401 || response.statusCode == 403) {
+      throw Exception('Unauthorized: Please login again');
+    } else {
+      throw Exception('Failed to update transaction: ${response.statusCode}');
     }
   }
 
   @override
   Future<void> deleteTransaction(String id) async {
-    try {
-      final response = await client.delete(
-        Uri.parse('$baseUrl/transactions/$id'),
-        headers: _getHeaders(),
-      );
+    final headers = await _getHeaders();
+    final response = await client.delete(
+      Uri.parse('$baseUrl/transactions/$id'),
+      headers: headers,
+    );
 
-      if (response.statusCode == 200 || response.statusCode == 204) {
-        return;
-      } else if (response.statusCode == 401 || response.statusCode == 403) {
-        throw Exception('Unauthorized: Please login again');
-      } else {
-        throw Exception('Failed to delete transaction: ${response.statusCode}');
-      }
-    } catch (e) {
-      if (e.toString().contains('Unauthorized')) {
-        rethrow;
-      }
-      throw Exception('Network error: $e');
+    if (response.statusCode == 200 || response.statusCode == 204) {
+      return;
+    } else if (response.statusCode == 401 || response.statusCode == 403) {
+      throw Exception('Unauthorized: Please login again');
+    } else {
+      throw Exception('Failed to delete transaction: ${response.statusCode}');
     }
   }
 }
