@@ -32,7 +32,7 @@ class MainApp extends StatelessWidget {
         ChangeNotifierProvider.value(value: di.sl<TransactionProvider>()),
       ],
       child: MaterialApp(
-        title: 'Akuntansi Iampelgading',
+        title: "I'AMPay",
         theme: AppTheme.lightTheme,
         home: const AuthChecker(),
         navigatorKey: navigatorKey,
@@ -81,7 +81,11 @@ class _AuthCheckerState extends State<AuthChecker> {
     if (_isChecking) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
-
-    return _isLoggedIn ? const AppNavigation() : const LoginPage();
+    // Jika token valid, masuk ke dashboard
+    if (_isLoggedIn) {
+      return const AppNavigation();
+    }
+    // Jika token tidak valid, tetap di login page
+    return const LoginPage();
   }
 }

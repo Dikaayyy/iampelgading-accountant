@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:iampelgading/core/services/auth_service.dart';
+import 'package:iampelgading/features/auth/presentation/pages/login_page.dart';
 import 'package:provider/provider.dart';
 import 'package:iampelgading/core/navigation/custom_bottom_navbar.dart';
 import 'package:iampelgading/features/dashboard/presentation/pages/dashboard_page.dart';
@@ -16,7 +18,8 @@ class AppNavigation extends StatefulWidget {
   State<AppNavigation> createState() => _AppNavigationState();
 }
 
-class _AppNavigationState extends State<AppNavigation> {
+class _AppNavigationState extends State<AppNavigation>
+    with WidgetsBindingObserver {
   DateTime? _lastPressedAt;
   late final TransactionProvider _transactionProvider;
   Timer? _tokenCheckTimer;
@@ -29,12 +32,32 @@ class _AppNavigationState extends State<AppNavigation> {
 
     // Start periodic token validation
     _startTokenCheck();
+    WidgetsBinding.instance.addObserver(this); // Add observer
   }
 
   @override
   void dispose() {
     _tokenCheckTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this); // Remove observer
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
+    if (state == AppLifecycleState.resumed) {
+      // Cek token setiap kali app di-resume
+      final authService = di.sl<AuthService>();
+      final isValid = authService.isTokenValid();
+      if (!isValid) {
+        await authService.logout();
+        if (mounted) {
+          Navigator.of(context).pushAndRemoveUntil(
+            MaterialPageRoute(builder: (_) => const LoginPage()),
+            (route) => false,
+          );
+        }
+      }
+    }
   }
 
   void _startTokenCheck() {
