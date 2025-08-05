@@ -8,11 +8,9 @@ import 'package:iampelgading/features/transaction/domain/usecases/add_transactio
 import 'package:iampelgading/features/transaction/domain/usecases/update_transaction_usecase.dart';
 import 'package:iampelgading/features/transaction/domain/usecases/delete_transaction_usecase.dart';
 import 'package:iampelgading/features/transaction/domain/entities/transaction.dart';
-import 'package:iampelgading/core/services/auth_service.dart';
-import 'package:iampelgading/core/di/service_locator.dart' as di;
 import 'package:iampelgading/core/services/csv_export_service.dart';
 import 'dart:async';
-import 'package:iampelgading/main.dart'; // pastikan import navigatorKey
+// pastikan import navigatorKey
 
 class TransactionProvider with ChangeNotifier {
   final AddTransaction? _addTransaction;

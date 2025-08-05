@@ -5,6 +5,7 @@ import 'package:iampelgading/core/widgets/custom_button.dart';
 import 'package:iampelgading/core/widgets/custom_snackbar.dart';
 import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:iampelgading/features/profile/presentation/pages/change_password_page.dart';
+import 'package:iampelgading/features/profile/presentation/pages/app_info_page.dart';
 import 'package:iampelgading/features/profile/presentation/widgets/profile_menu_item.dart';
 import 'package:iampelgading/features/auth/presentation/pages/login_page.dart';
 import 'package:iampelgading/features/auth/domain/usecases/change_password_usecase.dart';
@@ -29,12 +30,7 @@ class ProfileMenuSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.only(
-        top: 30,
-        left: 24,
-        right: 24,
-        bottom: 24,
-      ), // Reduced top padding
+      padding: const EdgeInsets.only(top: 30, left: 24, right: 24, bottom: 24),
       clipBehavior: Clip.antiAlias,
       decoration: const ShapeDecoration(
         color: Color(0xFFFDFCFA),
@@ -50,7 +46,6 @@ class ProfileMenuSection extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Added username display here since we removed the profile image section
           Padding(padding: const EdgeInsets.only(bottom: 24)),
 
           ProfileMenuItem(
@@ -71,7 +66,14 @@ class ProfileMenuSection extends StatelessWidget {
           ProfileMenuItem(
             title: 'Informasi Aplikasi',
             icon: Icons.chevron_right,
-            onTap: onAppInfo,
+            onTap: () {
+              PersistentNavBarNavigator.pushNewScreen(
+                context,
+                screen: const AppInfoPage(),
+                withNavBar: false,
+                pageTransitionAnimation: PageTransitionAnimation.cupertino,
+              );
+            },
           ),
           const SizedBox(height: 24),
 

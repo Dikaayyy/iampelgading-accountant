@@ -27,6 +27,7 @@ dependencies:
   infinite_scroll_pagination: ^4.0.0
   flutter_native_splash: ^2.4.6
   localstorage: ^6.0.0
+  package_info_plus: ^8.3.0
 
 dev_dependencies:
   flutter_test:
@@ -54,6 +55,7 @@ flutter:
     - assets/png/auth/
     - assets/svg/financial/
     - assets/png/splash/
+    - assets/svg/app/
 
   fonts:
     - family: Poppins
