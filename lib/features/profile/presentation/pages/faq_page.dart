@@ -35,8 +35,7 @@ class FAQPage extends StatelessWidget {
           _buildFAQItem(
             context,
             question: 'Apakah data saya aman?',
-            answer:
-                'Ya, semua data disimpan secara lokal di perangkat Anda dan tidak dikirim ke server eksternal.',
+            answer: 'Ya, semua data disimpan di server internal.',
           ),
           _buildFAQItem(
             context,
