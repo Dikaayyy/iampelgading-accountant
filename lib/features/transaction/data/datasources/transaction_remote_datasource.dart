@@ -172,8 +172,12 @@ class TransactionRemoteDataSourceImpl implements TransactionRemoteDataSource {
         );
       }
     } else if (response.statusCode == 401 || response.statusCode == 403) {
+      print('Unauthorized: ${response.body}');
       throw Exception('Unauthorized: Please login again');
     } else {
+      print(
+        'Failed to load transactions: ${response.statusCode} ${response.body}',
+      );
       throw Exception('Failed to load transactions: ${response.statusCode}');
     }
   }
