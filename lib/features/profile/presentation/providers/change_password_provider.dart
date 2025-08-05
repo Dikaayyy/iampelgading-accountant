@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:iampelgading/features/auth/domain/usecases/change_password_usecase.dart';
 
 class ChangePasswordProvider with ChangeNotifier {
+  final ChangePasswordUsecase _changePasswordUsecase;
+
   bool _isLoading = false;
   bool _isOldPasswordVisible = false;
   bool _isNewPasswordVisible = false;
@@ -10,10 +13,17 @@ class ChangePasswordProvider with ChangeNotifier {
   String _newPassword = '';
   String _confirmPassword = '';
 
+  ChangePasswordProvider({required ChangePasswordUsecase changePasswordUsecase})
+    : _changePasswordUsecase = changePasswordUsecase;
+
   bool get isLoading => _isLoading;
   bool get isOldPasswordVisible => _isOldPasswordVisible;
   bool get isNewPasswordVisible => _isNewPasswordVisible;
   bool get isConfirmPasswordVisible => _isConfirmPasswordVisible;
+
+  // Add getters for accessing private fields
+  String get newPassword => _newPassword;
+  String get confirmPassword => _confirmPassword;
 
   void toggleOldPasswordVisibility() {
     _isOldPasswordVisible = !_isOldPasswordVisible;
@@ -83,11 +93,11 @@ class ChangePasswordProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-
-      // Simulate successful password change
-      // In real implementation, call your API here
+      await _changePasswordUsecase.call(
+        currentPassword: _oldPassword,
+        newPassword: _newPassword,
+        confirmPassword: _confirmPassword,
+      );
 
       _isLoading = false;
       notifyListeners();

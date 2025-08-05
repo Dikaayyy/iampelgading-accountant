@@ -107,6 +107,9 @@ class _LoginViewState extends State<LoginView> {
   Widget _buildBottomSection() {
     return Container(
       width: double.infinity,
+      height:
+          MediaQuery.of(context).size.height *
+          0.4, // Fixed height - 40% of screen
       decoration: const ShapeDecoration(
         color: AppColors.white,
         shape: RoundedRectangleBorder(
@@ -122,8 +125,12 @@ class _LoginViewState extends State<LoginView> {
           topRight: Radius.circular(30),
         ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
-          physics: const BouncingScrollPhysics(), // Animasi scroll yang smooth
+          padding: EdgeInsets.symmetric(
+            horizontal:
+                MediaQuery.of(context).size.width * 0.06, // 6% of screen width
+            vertical: 16, // Reduced from 24
+          ),
+          physics: const BouncingScrollPhysics(),
           child: Consumer<AuthProvider>(
             builder: (context, provider, child) {
               return Form(
@@ -139,19 +146,25 @@ class _LoginViewState extends State<LoginView> {
                         color: Colors.black,
                         fontWeight: FontWeight.w600,
                         letterSpacing: -1.50,
+                        fontSize:
+                            MediaQuery.of(context).size.width *
+                            0.07, // Responsive font size
                       ),
                     ),
 
-                    const SizedBox(height: 24),
-
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.02,
+                    ), // 2% of screen height
                     // Form fields dengan optimasi
                     _buildFormFields(provider),
 
-                    const SizedBox(height: 24),
-
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.02,
+                    ), // 2% of screen height
                     // Login button
                     SizedBox(
                       width: double.infinity,
+                      height: 48, // Fixed button height
                       child: PrimaryButton(
                         text: 'Masuk',
                         onPressed:
@@ -162,7 +175,9 @@ class _LoginViewState extends State<LoginView> {
                       ),
                     ),
 
-                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.01,
+                    ), // 1% of screen height
                   ],
                 ),
               );
@@ -188,8 +203,9 @@ class _LoginViewState extends State<LoginView> {
           onChanged: provider.updateUsername,
         ),
 
-        const SizedBox(height: 20),
-
+        SizedBox(
+          height: MediaQuery.of(context).size.height * 0.015,
+        ), // 1.5% of screen height
         // Password field dengan optimasi
         Consumer<AuthProvider>(
           builder: (context, provider, child) {

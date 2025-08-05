@@ -3,21 +3,26 @@ import 'package:provider/provider.dart';
 import 'package:iampelgading/features/profile/presentation/providers/profile_provider.dart';
 import 'package:iampelgading/features/profile/presentation/widgets/profile_header.dart';
 import 'package:iampelgading/features/profile/presentation/widgets/profile_menu_section.dart';
+import 'package:iampelgading/features/auth/domain/usecases/change_password_usecase.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  final ChangePasswordUsecase changePasswordUsecase;
+
+  const ProfilePage({super.key, required this.changePasswordUsecase});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => ProfileProvider(),
-      child: const ProfileView(),
+      child: ProfileView(changePasswordUsecase: changePasswordUsecase),
     );
   }
 }
 
 class ProfileView extends StatefulWidget {
-  const ProfileView({super.key});
+  final ChangePasswordUsecase changePasswordUsecase;
+
+  const ProfileView({super.key, required this.changePasswordUsecase});
 
   @override
   State<ProfileView> createState() => _ProfileViewState();
@@ -81,6 +86,7 @@ class _ProfileViewState extends State<ProfileView> {
                         onChangePassword: provider.onChangePassword,
                         onChangeUsername: provider.onChangeUsername,
                         onAppInfo: provider.onAppInfo,
+                        changePasswordUsecase: widget.changePasswordUsecase,
                       ),
                     ),
                   ),

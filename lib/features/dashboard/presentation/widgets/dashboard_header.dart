@@ -3,12 +3,31 @@ import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:iampelgading/core/theme/app_text_styles.dart';
 import 'package:iampelgading/features/dashboard/presentation/widgets/dashboard_header_background.dart';
 import 'package:iampelgading/features/profile/presentation/pages/profile_page.dart';
+import 'package:iampelgading/features/auth/domain/usecases/change_password_usecase.dart';
+import 'package:iampelgading/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:iampelgading/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:iampelgading/core/services/auth_service.dart';
+import 'package:http/http.dart' as http;
 
 class DashboardHeader extends StatelessWidget {
   final String? userName;
   final double screenWidth;
 
   const DashboardHeader({super.key, required this.screenWidth, this.userName});
+
+  ChangePasswordUsecase _createChangePasswordUsecase() {
+    final client = http.Client();
+    final authService = AuthService();
+    final authRemoteDataSource = AuthRemoteDataSourceImpl(
+      client: client,
+      authService: authService,
+    );
+    final authRepository = AuthRepositoryImpl(
+      remoteDataSource: authRemoteDataSource,
+      authService: authService,
+    );
+    return ChangePasswordUsecase(repository: authRepository);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +109,9 @@ class DashboardHeader extends StatelessWidget {
               onTap: () {
                 PersistentNavBarNavigator.pushNewScreen(
                   context,
-                  screen: const ProfilePage(),
+                  screen: ProfilePage(
+                    changePasswordUsecase: _createChangePasswordUsecase(),
+                  ),
                   withNavBar: false,
                   pageTransitionAnimation: PageTransitionAnimation.cupertino,
                 );

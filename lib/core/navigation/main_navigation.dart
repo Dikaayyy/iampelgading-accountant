@@ -5,9 +5,28 @@ import 'package:iampelgading/core/navigation/navigation_service.dart';
 import 'package:iampelgading/features/dashboard/presentation/pages/dashboard_page.dart';
 import 'package:iampelgading/features/dashboard/presentation/pages/financial_records_page.dart';
 import 'package:iampelgading/features/profile/presentation/pages/profile_page.dart';
+import 'package:iampelgading/features/auth/domain/usecases/change_password_usecase.dart';
+import 'package:iampelgading/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:iampelgading/features/auth/data/datasources/auth_remote_datasource.dart';
+import 'package:iampelgading/core/services/auth_service.dart';
+import 'package:http/http.dart' as http;
 
 class MainNavigation extends StatelessWidget {
   const MainNavigation({super.key});
+
+  ChangePasswordUsecase _createChangePasswordUsecase() {
+    final client = http.Client();
+    final authService = AuthService();
+    final authRemoteDataSource = AuthRemoteDataSourceImpl(
+      client: client,
+      authService: authService,
+    );
+    final authRepository = AuthRepositoryImpl(
+      remoteDataSource: authRemoteDataSource,
+      authService: authService,
+    );
+    return ChangePasswordUsecase(repository: authRepository);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +65,7 @@ class MainNavigation extends StatelessWidget {
       const FinancialRecordsPage(),
       const _AddTransactionPage(),
       const _WalletPage(),
-      const ProfilePage(), // Replace _ProfilePage with ProfilePage
+      ProfilePage(changePasswordUsecase: _createChangePasswordUsecase()),
     ];
   }
 

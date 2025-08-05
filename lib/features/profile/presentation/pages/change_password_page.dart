@@ -3,16 +3,23 @@ import 'package:provider/provider.dart';
 import 'package:iampelgading/core/widgets/custom_text_field.dart';
 import 'package:iampelgading/core/widgets/custom_button.dart';
 import 'package:iampelgading/core/widgets/custom_app_bar.dart';
+import 'package:iampelgading/core/widgets/custom_snackbar.dart';
 import 'package:iampelgading/core/colors/app_colors.dart';
 import 'package:iampelgading/features/profile/presentation/providers/change_password_provider.dart';
+import 'package:iampelgading/features/auth/domain/usecases/change_password_usecase.dart';
 
 class ChangePasswordPage extends StatelessWidget {
-  const ChangePasswordPage({super.key});
+  final ChangePasswordUsecase changePasswordUsecase;
+
+  const ChangePasswordPage({super.key, required this.changePasswordUsecase});
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => ChangePasswordProvider(),
+      create:
+          (_) => ChangePasswordProvider(
+            changePasswordUsecase: changePasswordUsecase,
+          ),
       child: const ChangePasswordView(),
     );
   }
@@ -139,31 +146,53 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
     ChangePasswordProvider provider,
   ) async {
     if (_formKey.currentState?.validate() ?? false) {
+      // Cek apakah password baru dan konfirmasi password sama
+      if (provider.newPassword != provider.confirmPassword) {
+        CustomSnackbar.showError(
+          context: context,
+          title: 'Konfirmasi Password Salah',
+          message: 'Password baru dan konfirmasi password tidak sama.',
+          icon: Icons.error_outline,
+          showAtTop: true,
+        );
+        return;
+      }
+
       try {
         await provider.changePassword();
 
         if (context.mounted) {
-          // Show success message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Password berhasil diubah'),
-              backgroundColor: AppColors.success,
-              behavior: SnackBarBehavior.floating,
-            ),
+          // Show success message with custom snackbar
+          CustomSnackbar.showSuccess(
+            context: context,
+            title: 'Password Berhasil Diubah',
+            message: 'Password Anda telah berhasil diperbarui.',
+            icon: Icons.check_circle,
+            showAtTop: true,
           );
 
-          // Navigate back to profile
-          Navigator.of(context).pop();
+          // Navigate back to profile after a short delay
+          Future.delayed(const Duration(milliseconds: 500), () {
+            if (context.mounted) {
+              Navigator.of(context).pop();
+            }
+          });
         }
       } catch (e) {
         if (context.mounted) {
-          // Show error message
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Gagal mengubah password: ${e.toString()}'),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-            ),
+          // Extract error message
+          String errorMessage = e.toString();
+          if (errorMessage.contains('Exception: ')) {
+            errorMessage = errorMessage.replaceFirst('Exception: ', '');
+          }
+
+          // Show error message with custom snackbar
+          CustomSnackbar.showError(
+            context: context,
+            title: 'Gagal Mengubah Password',
+            message: errorMessage,
+            icon: Icons.error_outline,
+            showAtTop: true,
           );
         }
       }

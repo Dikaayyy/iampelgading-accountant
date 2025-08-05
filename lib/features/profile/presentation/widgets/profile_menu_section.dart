@@ -7,12 +7,14 @@ import 'package:persistent_bottom_nav_bar/persistent_bottom_nav_bar.dart';
 import 'package:iampelgading/features/profile/presentation/pages/change_password_page.dart';
 import 'package:iampelgading/features/profile/presentation/widgets/profile_menu_item.dart';
 import 'package:iampelgading/features/auth/presentation/pages/login_page.dart';
+import 'package:iampelgading/features/auth/domain/usecases/change_password_usecase.dart';
 
 class ProfileMenuSection extends StatelessWidget {
   final VoidCallback? onChangePassword;
   final VoidCallback? onChangeUsername;
   final VoidCallback? onAppInfo;
   final Function(String username, String? imageUrl)? onProfileUpdated;
+  final ChangePasswordUsecase changePasswordUsecase;
 
   const ProfileMenuSection({
     super.key,
@@ -20,6 +22,7 @@ class ProfileMenuSection extends StatelessWidget {
     this.onChangeUsername,
     this.onAppInfo,
     this.onProfileUpdated,
+    required this.changePasswordUsecase,
   });
 
   @override
@@ -56,7 +59,9 @@ class ProfileMenuSection extends StatelessWidget {
             onTap: () {
               PersistentNavBarNavigator.pushNewScreen(
                 context,
-                screen: const ChangePasswordPage(),
+                screen: ChangePasswordPage(
+                  changePasswordUsecase: changePasswordUsecase,
+                ),
                 withNavBar: false,
                 pageTransitionAnimation: PageTransitionAnimation.cupertino,
               );
