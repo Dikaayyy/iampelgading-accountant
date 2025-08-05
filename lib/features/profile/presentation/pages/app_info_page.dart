@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:iampelgading/core/colors/app_colors.dart';
 import 'package:iampelgading/core/theme/app_text_styles.dart';
 import 'package:iampelgading/core/widgets/custom_app_bar.dart';
+import 'package:iampelgading/core/widgets/snackbar_helper.dart'; // Add this import
 import 'package:iampelgading/features/profile/presentation/pages/faq_page.dart';
 import 'package:iampelgading/features/profile/presentation/widgets/app_info_item.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AppInfoPage extends StatefulWidget {
   const AppInfoPage({super.key});
@@ -207,8 +210,8 @@ class _AppInfoPageState extends State<AppInfoPage> {
         AppInfoItem(
           icon: Icons.email_outlined,
           title: 'Email Kontak',
-          subtitle: 'support@iampelgading.com',
-          onTap: () => _launchEmail('support@iampelgading.com'),
+          subtitle: 'adikakurniawan4@gmail.com',
+          onTap: () => _launchEmail('adikakurniawan4@gmail.com'),
         ),
         AppInfoItem(
           icon: Icons.code,
@@ -340,9 +343,133 @@ class _AppInfoPageState extends State<AppInfoPage> {
     );
   }
 
-  void _launchEmail(String email) {
-    // Implement email launcher
-    debugPrint('Launch email: $email');
+  void _launchEmail(String email) async {
+    try {
+      final Uri emailUri = Uri(
+        scheme: 'mailto',
+        path: email,
+        query: Uri.encodeQueryComponent(
+          'subject=Support I\'AMPay - Bantuan Aplikasi&body=Halo tim support I\'AMPay,\n\nSaya membutuhkan bantuan terkait:\n\n[Jelaskan masalah atau pertanyaan Anda di sini]\n\nTerima kasih.',
+        ),
+      );
+
+      // Check if email can be launched
+      if (await canLaunchUrl(emailUri)) {
+        final success = await launchUrl(
+          emailUri,
+          mode: LaunchMode.externalApplication,
+        );
+
+        if (success && mounted) {
+          SnackbarHelper.showSuccess(
+            context: context,
+            title: 'Email Dibuka',
+            message: 'Aplikasi email telah dibuka. Silakan kirim pesan Anda.',
+            showAtTop: true,
+          );
+        } else if (mounted) {
+          _showEmailFallback(email);
+        }
+      } else {
+        if (mounted) {
+          _showEmailFallback(email);
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        _showEmailFallback(email);
+      }
+    }
+  }
+
+  void _showEmailFallback(String email) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          title: Text(
+            'Tidak Dapat Membuka Email',
+            style: AppTextStyles.h3.copyWith(fontWeight: FontWeight.w600),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Aplikasi email tidak ditemukan di perangkat Anda. Silakan salin alamat email di bawah ini:',
+                style: AppTextStyles.body,
+              ),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.background[100],
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.neutral[50]!),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        email,
+                        style: AppTextStyles.body.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.base,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {
+                        // Copy to clipboard functionality
+                        _copyEmailToClipboard(email);
+                      },
+                      icon: Icon(Icons.copy, color: AppColors.base, size: 20),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Atau hubungi kami melalui:',
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.neutral[100],
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '• WhatsApp: +62 812-3456-7890\n• Instagram: @iampelgading_homeland',
+                style: AppTextStyles.body.copyWith(
+                  color: AppColors.neutral[200],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Tutup', style: TextStyle(color: AppColors.base)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _copyEmailToClipboard(String email) {
+    Clipboard.setData(ClipboardData(text: email)).then((_) {
+      if (mounted) {
+        SnackbarHelper.showSuccess(
+          context: context,
+          title: 'Email Disalin',
+          message: 'Alamat email telah disalin ke clipboard',
+          showAtTop: true,
+        );
+      }
+    });
   }
 
   void _showPrivacyPolicy() {
@@ -374,7 +501,7 @@ class _AppInfoPageState extends State<AppInfoPage> {
   }
 
   void _reportBug() {
-    _launchEmail('support@iampelgading.com');
+    _launchEmail('adikakurniawan4@gmail.com');
   }
 
   void _showInfoDialog(String title, String content) {
