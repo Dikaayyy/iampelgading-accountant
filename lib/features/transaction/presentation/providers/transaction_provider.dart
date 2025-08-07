@@ -93,8 +93,8 @@ class TransactionProvider with ChangeNotifier {
   List<String> get expenseCategories => [
     'Beban Gaji/Honor',
     'Beban Kebersihan',
-    'Beban Perlengkapan/ATK',
-    'Beban Listrik dan Air',
+    'Beban Perlengkapan',
+    'Beban Listrik, Air, dan Jaringan',
     'Beban Konsumsi',
     'Beban Lain-lain',
   ];
