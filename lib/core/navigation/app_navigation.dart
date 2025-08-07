@@ -8,7 +8,6 @@ import 'package:iampelgading/features/dashboard/presentation/pages/dashboard_pag
 import 'package:iampelgading/features/financial_records/presentation/pages/financial_records_page.dart';
 import 'package:iampelgading/features/transaction/presentation/providers/transaction_provider.dart';
 import 'package:iampelgading/core/di/service_locator.dart' as di;
-import 'package:iampelgading/core/interceptors/auth_interceptor.dart';
 import 'dart:async';
 
 class AppNavigation extends StatefulWidget {

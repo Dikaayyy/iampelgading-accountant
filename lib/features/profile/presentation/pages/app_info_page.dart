@@ -441,7 +441,7 @@ class _AppInfoPageState extends State<AppInfoPage> {
               ),
               const SizedBox(height: 8),
               Text(
-                '• WhatsApp: +62 812-3456-7890\n• Instagram: @iampelgading_homeland',
+                '• WhatsApp: +62 8954-0548-8848\n• Instagram: @dkaakbr_',
                 style: AppTextStyles.body.copyWith(
                   color: AppColors.neutral[200],
                 ),

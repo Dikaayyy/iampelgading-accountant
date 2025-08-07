@@ -95,6 +95,7 @@ class TransactionProvider with ChangeNotifier {
     'Beban Kebersihan',
     'Beban Perlengkapan/ATK',
     'Beban Listrik dan Air',
+    'Beban Konsumsi',
     'Beban Lain-lain',
   ];
 
