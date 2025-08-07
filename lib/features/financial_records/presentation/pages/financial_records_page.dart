@@ -525,6 +525,7 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
                 color: Colors.grey[600],
                 fontWeight: FontWeight.w500,
               ),
+              textAlign: TextAlign.center,
             ),
             if (_searchController.text.isNotEmpty) ...[
               const SizedBox(height: 8),

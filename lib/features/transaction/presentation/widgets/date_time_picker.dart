@@ -1,12 +1,39 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:iampelgading/core/colors/app_colors.dart';
 import 'package:iampelgading/features/transaction/presentation/providers/transaction_provider.dart';
 import 'package:iampelgading/core/widgets/minimal_text_field.dart';
 
-class DateTimePicker extends StatelessWidget {
+class DateTimePicker extends StatefulWidget {
   final TransactionProvider provider;
 
   const DateTimePicker({super.key, required this.provider});
+
+  @override
+  State<DateTimePicker> createState() => _DateTimePickerState();
+}
+
+class _DateTimePickerState extends State<DateTimePicker> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    // Update waktu real-time setiap detik
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        final now = TimeOfDay.now();
+        widget.provider.updateTime(now, context);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +43,7 @@ class DateTimePicker extends StatelessWidget {
         MinimalTextField(
           label: 'Tanggal',
           hintText: 'Pilih tanggal',
-          controller: provider.dateController,
+          controller: widget.provider.dateController,
           readOnly: true,
           suffixIcon: const Icon(
             Icons.calendar_month_rounded,
@@ -27,13 +54,13 @@ class DateTimePicker extends StatelessWidget {
 
         const SizedBox(height: 16),
 
-        // Time picker
+        // Time picker - Read only dengan waktu real-time
         MinimalTextField(
           label: 'Waktu',
-          hintText: 'Pilih waktu',
-          controller: provider.timeController,
+          hintText: 'Waktu otomatis',
+          controller: widget.provider.timeController,
           readOnly: true,
-          onTap: () => _selectTime(context),
+          enabled: false, // Disable field agar tidak bisa diklik
         ),
       ],
     );
@@ -42,7 +69,7 @@ class DateTimePicker extends StatelessWidget {
   void _selectDate(BuildContext context) async {
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: provider.selectedDate,
+      initialDate: widget.provider.selectedDate,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
       builder: (context, child) {
@@ -56,26 +83,7 @@ class DateTimePicker extends StatelessWidget {
     );
 
     if (pickedDate != null) {
-      provider.updateDate(pickedDate);
-    }
-  }
-
-  void _selectTime(BuildContext context) async {
-    final pickedTime = await showTimePicker(
-      context: context,
-      initialTime: provider.selectedTime,
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(
-            context,
-          ).copyWith(dialogBackgroundColor: AppColors.white),
-          child: child!,
-        );
-      },
-    );
-
-    if (pickedTime != null) {
-      provider.updateTime(pickedTime, context);
+      widget.provider.updateDate(pickedDate);
     }
   }
 }

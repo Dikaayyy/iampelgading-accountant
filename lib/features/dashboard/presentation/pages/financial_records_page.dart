@@ -62,8 +62,22 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
                   controller: _searchController,
                   hintText: 'Cari transaksi...',
                   onChanged: (value) {
-                    provider.updateSearchQuery(value);
+                    setState(() {
+                      // Trigger rebuild when search changes
+                    });
                   },
+                  suffixIcon:
+                      _searchController.text.isNotEmpty
+                          ? IconButton(
+                            icon: const Icon(Icons.clear),
+                            onPressed: () {
+                              _searchController.clear();
+                              setState(() {
+                                // Trigger rebuild when search is cleared
+                              });
+                            },
+                          )
+                          : null,
                 ),
               ),
 
@@ -93,6 +107,26 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
     );
   }
 
+  List<dynamic> _getFilteredTransactions(
+    List<dynamic> transactions,
+    String searchQuery,
+  ) {
+    if (searchQuery.isEmpty) {
+      return transactions;
+    }
+
+    return transactions.where((transaction) {
+      final title = transaction.title.toLowerCase();
+      final category = transaction.category.toLowerCase();
+      final description = transaction.description.toLowerCase();
+      final query = searchQuery.toLowerCase();
+
+      return title.contains(query) ||
+          category.contains(query) ||
+          description.contains(query);
+    }).toList();
+  }
+
   Widget _buildExpenseTab(TransactionProvider provider) {
     if (provider.isLoadingTransactions) {
       return const Center(child: CircularProgressIndicator());
@@ -103,7 +137,7 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
     final todayStart = DateTime(today.year, today.month, today.day);
     final todayEnd = DateTime(today.year, today.month, today.day, 23, 59, 59);
 
-    final expenseTransactions =
+    var expenseTransactions =
         provider.transactions
             .where(
               (transaction) =>
@@ -117,6 +151,13 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
             )
             .toList();
 
+    // Apply search filter
+    expenseTransactions =
+        _getFilteredTransactions(
+          expenseTransactions,
+          _searchController.text,
+        ).cast();
+
     if (expenseTransactions.isEmpty) {
       return Center(
         child: Column(
@@ -129,13 +170,22 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
             ),
             const SizedBox(height: 16),
             Text(
-              'Belum ada pengeluaran hari ini',
+              _searchController.text.isNotEmpty
+                  ? 'Tidak ada pengeluaran yang ditemukan'
+                  : 'Belum ada pengeluaran hari ini',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
             ),
+            if (_searchController.text.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Coba kata kunci lain',
+                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+              ),
+            ],
           ],
         ),
       );
@@ -170,7 +220,7 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
     final todayStart = DateTime(today.year, today.month, today.day);
     final todayEnd = DateTime(today.year, today.month, today.day, 23, 59, 59);
 
-    final incomeTransactions =
+    var incomeTransactions =
         provider.transactions
             .where(
               (transaction) =>
@@ -184,6 +234,13 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
             )
             .toList();
 
+    // Apply search filter
+    incomeTransactions =
+        _getFilteredTransactions(
+          incomeTransactions,
+          _searchController.text,
+        ).cast();
+
     if (incomeTransactions.isEmpty) {
       return Center(
         child: Column(
@@ -196,13 +253,22 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
             ),
             const SizedBox(height: 16),
             Text(
-              'Belum ada pemasukan hari ini',
+              _searchController.text.isNotEmpty
+                  ? 'Tidak ada pemasukan yang ditemukan'
+                  : 'Belum ada pemasukan hari ini',
               style: TextStyle(
                 color: Colors.grey[600],
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
             ),
+            if (_searchController.text.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                'Coba kata kunci lain',
+                style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+              ),
+            ],
           ],
         ),
       );
