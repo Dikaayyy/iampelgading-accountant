@@ -265,6 +265,47 @@ class TransactionProvider with ChangeNotifier {
 
   double get netIncome => totalIncome - totalExpense;
 
+  // Monthly calculations
+  double get totalIncomeThisMonth {
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+    final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+
+    return _transactions
+        .where(
+          (transaction) =>
+              transaction.isIncome &&
+              transaction.date.isAfter(
+                startOfMonth.subtract(const Duration(seconds: 1)),
+              ) &&
+              transaction.date.isBefore(
+                endOfMonth.add(const Duration(seconds: 1)),
+              ),
+        )
+        .fold(0.0, (sum, transaction) => sum + transaction.amount);
+  }
+
+  double get totalExpenseThisMonth {
+    final now = DateTime.now();
+    final startOfMonth = DateTime(now.year, now.month, 1);
+    final endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+
+    return _transactions
+        .where(
+          (transaction) =>
+              !transaction.isIncome &&
+              transaction.date.isAfter(
+                startOfMonth.subtract(const Duration(seconds: 1)),
+              ) &&
+              transaction.date.isBefore(
+                endOfMonth.add(const Duration(seconds: 1)),
+              ),
+        )
+        .fold(0.0, (sum, transaction) => sum + transaction.amount.abs());
+  }
+
+  double get netIncomeThisMonth => totalIncomeThisMonth - totalExpenseThisMonth;
+
   // Apply search and filters to transactions
   void _applyFilters() {
     _applyFiltersToTransactions(_paginatedTransactions);

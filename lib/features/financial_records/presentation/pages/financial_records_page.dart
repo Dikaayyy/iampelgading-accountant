@@ -36,6 +36,7 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
   final FocusNode _searchFocusNode = FocusNode();
   bool _isBalanceVisible = true;
   bool _isCurrentPage = true;
+  int _selectedBalanceIndex = 0; // 0 = All time, 1 = This month
 
   // Pagination controller
   final PagingController<int, Transaction> _pagingController = PagingController(
@@ -977,9 +978,15 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
     _refreshPagination();
   }
 
+  // Update _buildHeaderWithBalanceCard method
   Widget _buildHeaderWithBalanceCard(double screenWidth) {
+    // Calculate dynamic height based on slider presence
+    final baseHeight = 320.0;
+    final sliderHeight = 40.0; // slider height + spacing
+    final totalHeight = baseHeight + sliderHeight;
+
     return SizedBox(
-      height: 320,
+      height: totalHeight,
       child: Stack(
         children: [
           FinancialHeader(screenWidth: screenWidth, showGreeting: false),
@@ -989,15 +996,24 @@ class _FinancialRecordsPageState extends State<FinancialRecordsPage>
             right: 24,
             child: Consumer<TransactionProvider>(
               builder: (context, provider, child) {
-                // Always use ALL transactions for balance calculation
                 return BalanceCard(
                   balance: provider.netIncome,
                   income: provider.totalIncome,
                   expense: provider.totalExpense,
+                  monthlyBalance: provider.netIncomeThisMonth,
+                  monthlyIncome: provider.totalIncomeThisMonth,
+                  monthlyExpense: provider.totalExpenseThisMonth,
                   isVisible: _isBalanceVisible,
+                  showSlider: true,
+                  selectedIndex: _selectedBalanceIndex,
                   onToggleVisibility: () {
                     setState(() {
                       _isBalanceVisible = !_isBalanceVisible;
+                    });
+                  },
+                  onSliderChanged: (index) {
+                    setState(() {
+                      _selectedBalanceIndex = index;
                     });
                   },
                 );

@@ -9,6 +9,14 @@ class BalanceCard extends StatelessWidget {
   final VoidCallback? onToggleVisibility;
   final bool isVisible;
 
+  // New properties for slider functionality
+  final bool showSlider;
+  final int selectedIndex; // 0 = All time, 1 = This month
+  final ValueChanged<int>? onSliderChanged;
+  final double? monthlyBalance;
+  final double? monthlyIncome;
+  final double? monthlyExpense;
+
   const BalanceCard({
     super.key,
     required this.balance,
@@ -16,10 +24,21 @@ class BalanceCard extends StatelessWidget {
     required this.expense,
     this.onToggleVisibility,
     this.isVisible = true,
+    this.showSlider = false,
+    this.selectedIndex = 0,
+    this.onSliderChanged,
+    this.monthlyBalance,
+    this.monthlyIncome,
+    this.monthlyExpense,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Determine which data to show based on selected index
+    final currentBalance = selectedIndex == 0 ? balance : (monthlyBalance ?? 0);
+    final currentIncome = selectedIndex == 0 ? income : (monthlyIncome ?? 0);
+    final currentExpense = selectedIndex == 0 ? expense : (monthlyExpense ?? 0);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -38,6 +57,9 @@ class BalanceCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Slider (if enabled)
+          if (showSlider) ...[_buildSlider(), const SizedBox(height: 16)],
+
           // Balance Section
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,7 +79,9 @@ class BalanceCard extends StatelessWidget {
               Row(
                 children: [
                   Text(
-                    isVisible ? CurrencyFormatter.format(balance) : '••••••••',
+                    isVisible
+                        ? CurrencyFormatter.format(currentBalance)
+                        : '••••••••',
                     style: AppTextStyles.h1.copyWith(
                       color: const Color(0xFF202D41),
                       letterSpacing: -1.50,
@@ -96,7 +120,6 @@ class BalanceCard extends StatelessWidget {
                       SizedBox(
                         width: 20,
                         height: 20,
-
                         child: const Icon(
                           Icons.arrow_downward,
                           size: 20,
@@ -116,7 +139,9 @@ class BalanceCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    isVisible ? CurrencyFormatter.format(income) : '••••••••',
+                    isVisible
+                        ? CurrencyFormatter.format(currentIncome)
+                        : '••••••••',
                     style: AppTextStyles.h3.copyWith(
                       color: const Color(0xFF202D41),
                       letterSpacing: -1,
@@ -125,11 +150,12 @@ class BalanceCard extends StatelessWidget {
                 ],
               ),
 
-              // Expense
+              // Expense - Aligned to the right
               Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       SizedBox(
                         width: 20,
@@ -140,7 +166,7 @@ class BalanceCard extends StatelessWidget {
                           color: Color(0xFFFF4545),
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 8),
                       Text(
                         'Pengeluaran',
                         style: AppTextStyles.h4.copyWith(
@@ -153,7 +179,9 @@ class BalanceCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    isVisible ? CurrencyFormatter.format(expense) : '••••••••',
+                    isVisible
+                        ? CurrencyFormatter.format(currentExpense)
+                        : '••••••••',
                     textAlign: TextAlign.right,
                     style: AppTextStyles.h3.copyWith(
                       color: const Color(0xFF202D41),
@@ -163,6 +191,93 @@ class BalanceCard extends StatelessWidget {
                 ],
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSlider() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(4),
+      decoration: ShapeDecoration(
+        color: const Color(0xFFF5F5F5),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => onSliderChanged?.call(0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: ShapeDecoration(
+                  color: selectedIndex == 0 ? Colors.white : Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  shadows:
+                      selectedIndex == 0
+                          ? [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                          : null,
+                ),
+                child: Text(
+                  'Semua Waktu',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.body.copyWith(
+                    color:
+                        selectedIndex == 0
+                            ? const Color(0xFF202D41)
+                            : const Color(0xFF6A788C),
+                    fontWeight:
+                        selectedIndex == 0 ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => onSliderChanged?.call(1),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: ShapeDecoration(
+                  color: selectedIndex == 1 ? Colors.white : Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  shadows:
+                      selectedIndex == 1
+                          ? [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 4,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                          : null,
+                ),
+                child: Text(
+                  'Bulan Ini',
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.body.copyWith(
+                    color:
+                        selectedIndex == 1
+                            ? const Color(0xFF202D41)
+                            : const Color(0xFF6A788C),
+                    fontWeight:
+                        selectedIndex == 1 ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
